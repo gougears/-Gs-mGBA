@@ -1,2 +1,60 @@
-# -Gs-mGBA
-mGBAの非公式ブラウザエミュです
+# G’s mGBA
+
+mGBAを使用した非公式ブラウザ版GBAエミュレーターです。公開版 net53 をGitHub Pages向けに配置しています。
+
+## 遊び方
+
+GitHub Pagesを有効化した後のURL：
+https://kameiktk-svg.github.io/-Gs-mGBA/
+
+1. ブラウザで開き、自分で用意したGBA ROMを選択します。
+2. 画面上のボタン、または対応する外部コントローラーで操作します。
+3. セーブデータは設定画面から `.sav` として書き出せます。
+
+ROMや利用者のセーブデータは同梱していません。ブラウザ内のデータはURLごとに保存されるため、旧サイトからの移行時は旧サイトでセーブを書き出し、新しいサイトで読み込んでください。
+
+## 主な機能
+
+- GBA ROMの読み込み・記憶、ゲーム内セーブの読み込み／書き出し
+- 4つのクイックセーブスロット、バックアップ、倍速・連射
+- タッチ操作、外部コントローラー、スキンとボタン配置設定
+- 1台での2プレイヤー切り替え、Celio方式のオンライン通信
+- 通信エラーログの保存とJSON書き出し
+
+オンライン通信は実験的な機能です。PC版などとの実機通信には未解決のエラーがあり、GitHubへの移設で解消したものではありません。
+
+## 使用したもの・参考元
+
+| プロジェクト／技術 | 用途 |
+| --- | --- |
+| [mGBA](https://github.com/mgba-emu/mgba) | GBAエミュレーターコア |
+| [Exormeter/mGBA_celio_edition](https://github.com/Exormeter/mGBA_celio_edition) | Celio対応コアのベース。元ソース記載の基準コミット：`3da13060a586f2da8eb4ecbb167f642e2e4889c2` |
+| mGBA-celio-2.0.0-rom64-netlink6 の提供パッチ | ROM64・拡張セーブ・通信対応の元パッチ。ソースアーカイブに収録 |
+| [mgba-celio-web](https://liru55.github.io/mgba-celio-web/) | ブラウザ版作成時の参考元 |
+| [Emscripten](https://emscripten.org/) / WebAssembly | C/C++コアのブラウザ向けビルド。ビルドスクリプトの想定はEmscripten 3.1.74 |
+| Celio中継サーバー | オンライン通信で `wss://celio-server.up.railway.app` を使用 |
+| 利用者から提供されたDelta形式スキンと追加スキン | 操作画面の画像・配置の素材 |
+
+ROM・セーブファイル自体を中継サーバーへアップロードする機能はありません。オンライン通信時はゲームの通信データを中継します。
+
+## ソースとライセンス
+
+- ブラウザ側の実行ファイル：[`docs/`](docs/)
+- 変更済みコア、ビルドスクリプト、元パッチ、Webソース、テスト：[`docs/source.zip`](docs/source.zip)
+- mGBAコアのライセンス：Mozilla Public License 2.0。本文は [`LICENSE`](LICENSE)。同梱の第三者コードには各ファイルのライセンスが適用されます。
+- スキンなどの画像を一律にMPL-2.0で再許諾するものではありません。
+- 開発履歴：[`CHANGELOG.md`](CHANGELOG.md)（過去版の仕様や検証記録も含みます）
+
+コアを再ビルドする場合は `source.zip` を別ディレクトリに展開し、EmscriptenとCMakeを用意して `build-browser.sh` を実行します。生成された `build/celio-web.js` を `docs/celio-web.js` に配置してください。ソース変更時は配布する `source.zip` も更新してください。
+
+## GitHub Pagesの設定
+
+このリポジトリの **Settings → Pages → Build and deployment** で、次を選びます。
+
+- Source：**Deploy from a branch**
+- Branch：**main**
+- Folder：**/docs**
+
+保存後、GitHub Pagesの公開処理が完了すると上記URLから開けます。以降は `main` の `docs/` を更新すると公開内容も更新されます。
+
+友人用のパスワード機能・PKSパッチ機能はこの公開版には含めていません。
