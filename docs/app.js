@@ -71,7 +71,7 @@ async function dbOp(store,mode,key,value){await dbReady;if(!db)throw Error('端�
 function snapshot(){if(!loaded)return null;const n=M._save_size();return n?M.HEAPU8.slice(M._save_ptr(),M._save_ptr()+n):null;}
 async function persist(){const key=romKey,data=snapshot();if(!key||!data)return;try{await dbOp('saves','put',key,data);}catch(e){tell(e.message+' .savを書き出して保管してください。');}}
 function alloc(bytes,fn){const p=M._malloc(bytes.length);if(!p)throw Error('メモリが不足しています');try{M.HEAPU8.set(bytes,p);return fn(p,bytes.length);}finally{M._free(p);}}
-function paint(){if(!loaded)return;const p=M._video();image.data.set(M.HEAPU8.subarray(p,p+153600));for(let i=3;i<image.data.length;i+=4)image.data[i]=255;ctx.putImageData(image,0,0);}
+function paint(){if(!loaded)return;const p=M._video();image.data.set(M.HEAPU8.subarray(p,p+153600));for(let i=3;i<image.data.length;i+=4)image.data[i]=255;ctx.putImageData(image,0,0);if(recordingSession&&!recordingSession.stopping)drawCaptureFrame(recordingSession.capture);}
 function audioLabel(message){$('audiostatus').textContent=message||('音量 '+settings.volume+'% · '+(audio?.state==='running'?'音声エンジン動作中':'「音声を開始・再開」を押してください。'));}
 function flushAudio(){for(const s of sounds){try{s.stop();s.disconnect();}catch{}}sounds.clear();nextSound=0;}
 function updateGain(){if(gain&&audio)gain.gain.setTargetAtTime(muted?0:settings.volume/100,audio.currentTime,.01);audioLabel();}
@@ -582,6 +582,18 @@ function navigateCaptureMenu(pressed,triggered,now=Date.now()){
 $('capturephoto').onclick=()=>{const defer=captureFromPad;closeCaptureMenu();return captureScreenshot(defer);};
 $('capturevideo').onclick=()=>{closeCaptureMenu();return startGameRecording();};
 $('capturecancel').onclick=closeCaptureMenu;
+// Integer scaling preserves the original pixel edges in exported media.
+function createCaptureSurface(scale){
+ const source=$('screen'),canvas=document.createElement('canvas');
+ canvas.width=source.width*scale;canvas.height=source.height*scale;
+ const context=canvas.getContext('2d',{alpha:false});
+ if(!context)throw Error('撮影用の画面を作成できません。');
+ context.imageSmoothingEnabled=false;
+ const capture={canvas,context};drawCaptureFrame(capture);return capture;
+}
+function drawCaptureFrame(capture){
+ capture.context.drawImage($('screen'),0,0,capture.canvas.width,capture.canvas.height);
+}
 function cleanRecording(session){
  clearInterval(session.timer);try{session.gain.disconnect(session.output);}catch{}
  for(const track of session.stream.getTracks())track.stop();
@@ -600,9 +612,9 @@ async function startGameRecording(){
   await audioStart();if(!audio||audio.state!=='running')throw Error('先にゲーム画面をタップして音声を開始してください。');
   if(typeof audio.createMediaStreamDestination!=='function')throw Error('ゲーム音声の録音に対応していません。');
   const mime=['video/mp4','video/webm;codecs=vp8,opus','video/webm'].find(t=>Recorder.isTypeSupported(t));if(!mime)throw Error('対応する動画形式が見つかりません。');
-  paint();stream=$('screen').captureStream(30);output=audio.createMediaStreamDestination();recordGain=gain;recordGain.connect(output);for(const track of output.stream.getAudioTracks())stream.addTrack(track);
-  const recorder=new Recorder(stream,{mimeType:mime,videoBitsPerSecond:1500000,audioBitsPerSecond:128000});
-  const session={recorder,stream,output,gain:recordGain,chunks:[],size:0,started:Date.now(),name:romName.replace(/\.[^.]+$/,''),player:activePlayer+1,stopping:false};recordingSession=session;
+  paint();const capture=createCaptureSurface(4);stream=capture.canvas.captureStream(60);output=audio.createMediaStreamDestination();recordGain=gain;recordGain.connect(output);for(const track of output.stream.getAudioTracks())stream.addTrack(track);
+  const recorder=new Recorder(stream,{mimeType:mime,videoBitsPerSecond:8000000,audioBitsPerSecond:128000});
+  const session={recorder,stream,output,capture,gain:recordGain,chunks:[],size:0,started:Date.now(),name:romName.replace(/\.[^.]+$/,''),player:activePlayer+1,stopping:false};recordingSession=session;
   recorder.ondataavailable=e=>{if(e.data?.size){session.chunks.push(e.data);session.size+=e.data.size;if(session.size>256*1024*1024)stopGameRecording('録画データが大きくなったため終了しました。');}};
   recorder.onerror=e=>{session.reason='録画中にエラーが発生しました。';if(recorder.state==='inactive')recorder.onstop();else stopGameRecording(session.reason);};
   recorder.onstop=()=>{
@@ -630,7 +642,7 @@ function dismissShotNotice(){clearTimeout(shotNoticeTimer);$('shotsave').hidden=
 function showShotNotice(){clearTimeout(shotNoticeTimer);$('shotsave').hidden=false;$('shotdismiss').hidden=false;$('shotsavepending').hidden=false;shotNoticeTimer=setTimeout(dismissShotNotice,6000);}
 async function captureScreenshot(deferSave=false){
  if(!loaded||busy)return gameNotice('先にROMを開いてください。');
- try{paint();const encoded=$('screen').toDataURL('image/png').split(',')[1],raw=atob(encoded),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));const stamp=new Date().toISOString().replace(/[:.]/g,'-');const name=romName.replace(/\.[^.]+$/,'')+'_P'+(activePlayer+1)+'_'+stamp+'.png';const file=new File([bytes],name,{type:'image/png'});if(deferSave===true){pendingControllerShot=file;showShotNotice();gameNotice('撮影しました。設定の「セーブ」からも画像を保存できます。');}else await saveFile(file);}
+ try{paint();const encoded=createCaptureSurface(6).canvas.toDataURL('image/png').split(',')[1],raw=atob(encoded),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));const stamp=new Date().toISOString().replace(/[:.]/g,'-');const name=romName.replace(/\.[^.]+$/,'')+'_P'+(activePlayer+1)+'_'+stamp+'.png';const file=new File([bytes],name,{type:'image/png'});if(deferSave===true){pendingControllerShot=file;showShotNotice();gameNotice('撮影しました。設定の「セーブ」からも画像を保存できます。');}else await saveFile(file);}
  catch(e){if(e.name!=='AbortError')gameNotice('撮影画像を保存できません：'+e.message);}
 }
 $('screenshot').onclick=()=>requestCapture();

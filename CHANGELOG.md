@@ -1,3 +1,10 @@
+## 2026-10-19 撮影画質の改善
+
+- スクリーンショットをドットを維持した6倍サイズ（1440×960）のPNGで保存。
+- 動画を4倍サイズ（960×640）、最大60fps、映像8Mbps指定で録画。
+- 録画用画面はゲーム描画に同期し、ゲーム画面と音声のみを収録。
+- 実際のフレームレート・ビットレートは端末とブラウザに依存します。
+
 # mGBA Celio Pocket — browser build 42
 
 Built from the patches in the user's mGBA-celio-2.0.0-rom64-netlink6-win64.zip.
