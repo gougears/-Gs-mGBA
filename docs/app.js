@@ -116,7 +116,7 @@ function updateTurboButton(button){
 }
 function syncTurboIndicator(){for(const button of document.querySelectorAll('.turbo-state'))updateTurboButton(button);updateTurboButton($('custom-turbo'));}
 function setSpeed(n){speed=n;last=0;acc=0;flushAudio();$('speedstatus').textContent='現在の速度：'+speed+'倍';updateGain();syncTurboIndicator();}
-function loop(t){requestAnimationFrame(loop);pollGamepad();const onlineHold=paused&&linkMode==='online'&&link?.active;if(!startupStarted||!loaded||(paused&&!onlineHold)||busy){last=t;return;}if(!last)last=t;acc+=Math.min(100,t-last);last=t;const dt=1000/59.7275;let count=0;try{while(acc>=dt&&count<6){for(let i=0;i<speed;i++){M._frame(onlineHold?0:rapidFrameKeys());consumeAudio();if(link?.active){link.pump();if(linkMode==='local'&&link.active){const peer=players[1-activePlayer].M;peer._frame(0);peer._audio_read();link.pump();}}}acc-=dt;count++;}if(count&&!onlineHold)paint();}catch(e){pause(true);tell('実行エラー：'+e.message);}}
+function loop(t){requestAnimationFrame(loop);pollGamepad();const onlineHold=paused&&linkMode==='online'&&link?.active;if(!startupStarted||!loaded||(paused&&!onlineHold)||busy){last=t;return;}if(!last)last=t;acc+=Math.min(100,t-last);last=t;const dt=1000/59.7275;let count=0;try{while(acc>=dt&&count<6){for(let i=0;i<speed;i++){window.gsCheatsSync?.();M._frame(onlineHold?0:rapidFrameKeys());consumeAudio();if(link?.active){link.pump();if(linkMode==='local'&&link.active){const peer=players[1-activePlayer].M;peer._frame(0);peer._audio_read();link.pump();}}}acc-=dt;count++;}if(count&&!onlineHold)paint();}catch(e){pause(true);tell('実行エラー：'+e.message);}}
 function openPanel(id){if(id==='quickpanel'||id==='savepanel')selectSettingsTab('saves');if(id==='netpanel')selectSettingsTab('network');clearKeys();$('settingspanel').hidden=false;$(id).hidden=false;renderLayoutPreview();$(id).scrollIntoView({behavior:'smooth',block:'nearest'});if(externalPadConnected&&id==='settingspanel'){padNavZone='tabs';focusPadSetting($('tab-'+activeSettingsTab));}}
 function closeSettings(){cancelGameRestart();closePadChoices(false);clearPadFocus();$('settingspanel').hidden=true;clearKeys();applyPositions();if(loaded&&!paused)audioStart();}
 for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>{if(b.dataset.close==='settingspanel')closeSettings();else $(b.dataset.close).hidden=true;};
@@ -563,7 +563,7 @@ renderPadSettings();
 const settingsTabNames=['rom','saves','settings','network','info','gamepad'];let activeSettingsTab='rom';
 function selectSettingsTab(name){
  cancelGameRestart();
- if(['controls','audio','system','rapid','guide'].includes(name)){openGeneralSection(name);name='settings';}if(!settingsTabNames.includes(name))return;if(name!==activeSettingsTab)$('settingscontent').scrollTop=0;activeSettingsTab=name;
+ if(['display','controls','audio','system','rapid','guide','cheats','memory'].includes(name)){openGeneralSection(name);name='settings';}if(!settingsTabNames.includes(name))return;if(name!==activeSettingsTab)$('settingscontent').scrollTop=0;activeSettingsTab=name;
  for(const k of settingsTabNames){$('page-'+k).hidden=k!==name;$('tab-'+k).setAttribute('aria-selected',String(k===name));$('tab-'+k).tabIndex=k===name?0:-1;}
  renderLayoutPreview();
 }
@@ -695,8 +695,8 @@ $('startgame').onclick=()=>{
  else{$('startmessage').textContent='読み込みが終わり次第、自動で開始します…';$('startgame').textContent='起動を準備しています…';}
 };
 
-function openGeneralSection(name){for(const key of ['controls','audio','system','rapid','guide']){$('page-'+key).hidden=key!==name;$('open-'+key).setAttribute('aria-expanded',String(key===name));}if(name==='controls')renderLayoutPreview();}
-for(const key of ['controls','audio','system','rapid','guide'])$('open-'+key).onclick=()=>{const open=$('page-'+key).hidden;for(const k of ['controls','audio','system','rapid','guide']){$('page-'+k).hidden=true;$('open-'+k).setAttribute('aria-expanded','false');}if(open)openGeneralSection(key);};
+function openGeneralSection(name){for(const key of ['display','controls','audio','system','rapid','guide','cheats','memory']){$('page-'+key).hidden=key!==name;$('open-'+key).setAttribute('aria-expanded',String(key===name));}if(name==='controls')renderLayoutPreview();}
+for(const key of ['display','controls','audio','system','rapid','guide','cheats','memory'])$('open-'+key).onclick=()=>{const open=$('page-'+key).hidden;for(const k of ['display','controls','audio','system','rapid','guide','cheats','memory']){$('page-'+k).hidden=true;$('open-'+k).setAttribute('aria-expanded','false');}if(open)openGeneralSection(key);};
 function renderLayoutPreview(){const area=$('layoutpreview'),pad=$('padarea');
  if(area.closest('[hidden]')||!area.clientWidth||!pad.clientWidth||!pad.clientHeight)return;
  const pw=pad.clientWidth||320,ph=pad.clientHeight||270;
@@ -739,8 +739,8 @@ syncTurboIndicator();
 function deltaLayout(){const s=CELIO_SKINS[settings.skin];return s.layouts[matchMedia('(orientation: landscape)').matches?'landscape':'portrait']||s.layouts.portrait||s.layouts.landscape;}
 function fitDeltaSkin(){
  const p=$('player'),area=$('padarea');if(externalDisplay())return;
- const r=deltaLayout(),bar=document.querySelector('.playbar'),top=bar.offsetHeight||44,w=p.clientWidth,h=p.clientHeight-top-(parseFloat(getComputedStyle(p).paddingBottom)||0);
- const scale=Math.min(w/r.size.width,h/r.size.height),width=r.size.width*scale,height=r.size.height*scale,x=(w-width)/2,y=top+(h-height)/2;
+ const r=deltaLayout(),bar=document.querySelector('.playbar'),top=bar.offsetHeight||44,safeLeft=parseFloat(getComputedStyle(p).getPropertyValue('--safe-left'))||0,safeRight=parseFloat(getComputedStyle(p).getPropertyValue('--safe-right'))||0,w=p.clientWidth-safeLeft-safeRight,h=p.clientHeight-top-(parseFloat(getComputedStyle(p).paddingBottom)||0);
+ const scale=Math.min(w/r.size.width,h/r.size.height),width=r.size.width*scale,height=r.size.height*scale,x=safeLeft+(w-width)/2,y=top+(h-height)/2;
  for(const [k,v]of Object.entries({x,y,w:width,h:height,sx:x+r.screen.x*scale,sy:y+r.screen.y*scale,sw:r.screen.width*scale,sh:r.screen.height*scale}))p.style.setProperty('--delta-'+k,v+'px');
  area.style.width='';area.style.height='';area.style.flex='';area.style.aspectRatio='';
 }
