@@ -1,0 +1,10 @@
+{
+  "id": "./",
+  "name": "G’s mGBA",
+  "short_name": "G’s mGBA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d1422",
+  "theme_color": "#101c2e"
+}
