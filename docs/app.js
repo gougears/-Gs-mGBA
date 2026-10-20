@@ -381,7 +381,17 @@ $('netlogsave').onclick=async()=>{try{const stamp=new Date().toISOString().repla
 $('netlogclear').onclick=()=>{celioDiagnostics.clear();$('netlogstatus').textContent=celioDiagnostics.storageOK?'保存した通信ログを削除しました。':'端末の保存領域にアクセスできません。';};
 
 $('rememberrom').onchange=e=>{settings.rememberROM=e.target.checked;remember();$('rommemorystatus').textContent=settings.rememberROM?'次に開いたROMから記憶します。':'ROMの記憶・自動読込をオフにしました。保存済みROMは削除ボタンから消せます。';};
-$('forgetrom').onclick=async()=>{try{await dbOp('roms','delete',activePlayer);$('rommemorystatus').textContent='記憶ROMを削除しました。ゲームとセーブはそのままです。';}catch(e){$('rommemorystatus').textContent=e.message;}};
+let romListRevision=0;
+async function renderRememberedROMs(){
+ const rev=++romListRevision,list=$('remembered-rom-list');list.textContent='保存済みROMを確認中…';
+ try{const records=await Promise.all([0,1].map(i=>dbOp('roms','get',i)));if(rev!==romListRevision)return;list.replaceChildren();
+ for(let i=0;i<2;i++){const record=records[i];if(!record?.bytes)continue;const card=document.createElement('div');card.className='remembered-rom-card';const meta=document.createElement('div'),title=document.createElement('strong'),detail=document.createElement('small');title.textContent=record.name;detail.textContent='プレイヤー'+(i+1)+'の記憶 · '+((record.bytes.byteLength||0)/1048576).toFixed(1)+' MB';meta.append(title,detail);const actions=document.createElement('div');actions.className='remembered-rom-actions';
+ const open=document.createElement('button');open.type='button';open.textContent='開く';open.onclick=async()=>{if(busy||!M)return;open.disabled=true;try{const latest=await dbOp('roms','get',i);if(!latest?.bytes)return await renderRememberedROMs();const bytes=latest.bytes instanceof Uint8Array?latest.bytes:new Uint8Array(latest.bytes);await $('rom').onchange({target:{files:[{name:latest.name,size:bytes.byteLength}],value:''},rememberedBytes:bytes,rememberedDigest:latest.digest});}catch(e){$('rommemorystatus').textContent=e.message;}finally{open.disabled=false;}};
+ const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.className='rom-delete';remove.onclick=async()=>{if(busy)return;remove.disabled=true;try{await dbOp('roms','delete',i);$('rommemorystatus').textContent='プレイヤー'+(i+1)+'の記憶ROMを削除しました。ゲームとセーブはそのままです。';await renderRememberedROMs();}catch(e){$('rommemorystatus').textContent=e.message;remove.disabled=false;}};actions.append(open,remove);card.append(meta,actions);list.append(card);}
+ if(!list.children.length)list.textContent='保存済みROMはありません。「ROMをこの端末に記憶する」をオンにしてROMを開いてください。';
+ }catch(e){if(rev===romListRevision)list.textContent=e.message;}
+}
+
 async function restoreRememberedROMs(prefetched){
  if(!settings.rememberROM)return;restoringROM=true;playerUI();
  try{for(let i=0;i<2;i++){const record=prefetched?prefetched[i]:await dbOp('roms','get',i);if(!record?.bytes||record.closed)continue;await selectPlayer(i);const bytes=record.bytes instanceof Uint8Array?record.bytes:new Uint8Array(record.bytes);await $('rom').onchange({target:{files:[{name:record.name,size:bytes.byteLength}],value:''},rememberedBytes:bytes,rememberedDigest:record.digest});}if(players[0].loaded)await selectPlayer(0);}
@@ -564,7 +574,7 @@ const settingsTabNames=['settings','rom','saves','network','device','cheats','ga
 const sectionOwners={display:'settings',controls:'settings',audio:'settings',rapid:'settings',memory:'device',system:'device',guide:'info'};
 function selectSettingsTab(name){
  cancelGameRestart();
- if(sectionOwners[name]){openGeneralSection(name);name=sectionOwners[name];}if(!settingsTabNames.includes(name))return;if(name!==activeSettingsTab)$('settingscontent').scrollTop=0;activeSettingsTab=name;
+ if(sectionOwners[name]){openGeneralSection(name);name=sectionOwners[name];}if(!settingsTabNames.includes(name))return;if(name!==activeSettingsTab)$('settingscontent').scrollTop=0;activeSettingsTab=name;if(name==='rom')renderRememberedROMs();
  for(const k of settingsTabNames){$('page-'+k).hidden=k!==name;$('tab-'+k).setAttribute('aria-selected',String(k===name));$('tab-'+k).tabIndex=k===name?0:-1;}
  renderLayoutPreview();
 }
