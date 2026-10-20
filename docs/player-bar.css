@@ -2,3 +2,14 @@
 #onlinepausenote{display:block;font-size:12px;margin-top:12px;letter-spacing:0}
 
 #player .turbo-state{background:var(--turbo-face,#344455)!important;color:#fff!important;border:0!important;border-radius:9px;font:700 clamp(7px,2.3vw,12px)/1.1 system-ui,sans-serif!important;display:flex;align-items:center;justify-content:center;padding:1px!important;white-space:nowrap;opacity:1;box-sizing:border-box}#player .turbo-state.turbo-on{background:#176547!important;color:#fff9c4!important;box-shadow:inset 0 0 0 2px #9df2bd,0 0 8px #5bd99580}#player.landscape-skin .turbo-state{font-size:9px!important}
+
+#settingsopen[hidden]{display:none!important}
+.playbar #topsave,.playbar #topreset{white-space:nowrap}
+.game-action-dialog[hidden]{display:none!important}
+.game-action-dialog:not([hidden]){position:fixed;inset:0;z-index:2147483001;background:#030912b8;display:grid;place-items:center;padding:20px;box-sizing:border-box;overflow:auto}
+.game-action-card{box-sizing:border-box;width:min(100%,420px);padding:20px;border:1px solid #64849d;border-radius:16px;background:#13243a;color:#edf3ff;font:15px/1.7 system-ui}
+.game-action-card h2{margin:0 0 10px;font-size:20px;color:#edf3ff}.game-action-card p{color:#c5d7e9;overflow-wrap:anywhere}
+.game-action-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.game-action-card button,.game-action-card .filebutton{font-size:16px;min-height:44px;margin:0;background:#294568;color:#edf3ff;border:1px solid #7391aa;border-radius:9px;padding:10px;box-sizing:border-box}
+#topexport{background:#d8f6e9;color:#193c34}.game-action-card .filebutton{display:flex;align-items:center;justify-content:center}
+@media(max-width:400px){.playbar{gap:4px;padding-inline:5px}.playbar>button:not(#playerlabel){padding-inline:6px;font-size:11px}.playbar #romversion{font-size:9px}}

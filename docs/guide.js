@@ -7,13 +7,15 @@
  ['B','ゲームのBボタン。多くのゲームではキャンセル・戻る操作です。','.skin-hit[data-key="1"],.ab [data-key="1"]'],
  ['L / R','ゲームのL・Rボタン。機能はゲームによって異なります。','.skin-hit[data-key="9"],.skin-hit[data-key="8"],.padgroup[data-group="l"],.padgroup[data-group="r"]'],
  ['START / SELECT','ゲームのスタート・セレクトボタン。メニューなど、役割はゲームによって異なります。','.skin-hit[data-key="3"],.skin-hit[data-key="2"],#custom-start,#custom-select'],
- ['設定 / MENU','音量、倍速、ボタン配置、ROM、セーブなどを設定します。','#settingsopen,.skin-hit[aria-label="設定"],#custom-home'],
+ ['設定 / MENU','音量、倍速、ボタン配置、ROM、セーブなどを設定します。','.skin-hit[aria-label="設定"],#custom-home'],
  ['TURBO','標準速度と、設定した2〜4倍速を切り替えます。通信中は1倍速です。','.skin-hit[aria-label="倍速切替"],#custom-turbo'],
  ['Q.SAVE','選択中のクイックセーブ枠へ現在の状態を保存します。同じ枠は上書きされます。ゲーム内セーブ・.savとは別です。','.skin-hit[aria-label="クイックセーブ"],#custom-quickSave'],
  ['Q.LOAD','選択中のクイックセーブ枠から再開します。未保存の進行は戻りません。通信中は使えません。','.skin-hit[aria-label="クイックロード"],#custom-quickLoad'],
  ['連射','「連射」→連射したいゲームボタンの順に押します。もう一度「連射」で解除。速さは設定で変更できます。','#rapidbutton,#custom-rapid,.skin-hit[aria-label="連射"]'],
  ['撮影','撮影ボタンからスクリーンショット・録画を選びます。録画中に撮影ボタンをもう一度押すと終了。保存する操作まで行ってください。','[data-screenshot]' ],
  ['P1 / P2','1台通信で相手側のROMも読み込んだ後、操作するプレイヤーを切り替えます。','#playerlabel'],
+ ['セーブ','ゲーム内セーブ（.sav）の読込・保存を選びます。保存前にゲーム内でレポートを書いてください。クイックセーブとは別です。','#topsave'],
+ ['再起動','操作中のゲームを起動し直します。確認画面の「再起動する」で実行します。未セーブの進行は失われます。','#topreset'],
  ['通信','1台で2つのゲームを動かす通信、またはオンライン通信を設定します。オンライン通信にはネットが必要です。','#netshortcut']
  ];
  let selected=0, boxes=[], scale=1, previousOverflow='';
