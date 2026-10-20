@@ -19,3 +19,16 @@
 #settingspanel .skin-grid .skin-card{background:#f7faf9!important;color:#243948!important;border:2px solid #a4b9c3!important}#settingspanel .skin-grid .skin-card[aria-pressed=true]{background:#d8f3e7!important;color:#183b32!important;border-color:#23866a!important}#settingspanel .skin-card span{color:inherit!important}#settingspanel #skincount{color:#425f6e!important}#settingspanel #skinquery{background:#fff!important;color:#203746!important}
 
 #settingspanel .skin-controller-preview{display:block;position:relative;width:100%;max-width:160px;aspect-ratio:320/400;overflow:hidden;border-radius:9px;box-shadow:0 1px 4px #0003} #settingspanel .skin-card .skin-controller-preview img{max-width:none;min-height:0;margin:0} #settingspanel .skin-card{justify-content:flex-start}
+
+#deltamenu{display:none}#player.delta-skin #deltamenu{display:block}
+main#player.delta-skin{position:relative!important;display:block!important;max-width:none!important;width:100%!important;height:100svh!important;margin:0!important;padding:0!important;top:0!important;transform:none!important;aspect-ratio:auto!important}
+#player.delta-skin .playbar{display:flex!important;position:relative!important;inset:auto!important;height:44px;z-index:5}
+#player.delta-skin #padarea{position:absolute!important;left:var(--delta-x)!important;top:var(--delta-y)!important;width:var(--delta-w)!important;height:var(--delta-h)!important;margin:0!important;inset-inline-end:auto;bottom:auto;min-height:0;aspect-ratio:auto!important;border-radius:0!important;background:transparent!important;overflow:visible!important;pointer-events:none;z-index:auto}
+#player.delta-skin #padarea .skin-art{z-index:1;object-fit:fill!important}
+#player.delta-skin #padarea .skin-hit{pointer-events:auto;z-index:3}
+#player.delta-skin .game-stage{position:absolute!important;left:var(--delta-sx)!important;top:var(--delta-sy)!important;width:var(--delta-sw)!important;height:var(--delta-sh)!important;min-height:0!important;aspect-ratio:auto!important;transform:none!important;z-index:2;container-type:normal}
+#player.delta-skin .game-frame{border:0!important;border-radius:0!important}
+#player.delta-skin #empty{font-size:12px;padding:5px}#player.delta-skin #empty .filebutton{padding:8px}
+.delta-import p{font-size:12px}.delta-import #deltaskinstatus{overflow-wrap:anywhere}
+
+main#player.delta-skin{padding-bottom:env(safe-area-inset-bottom)!important}#player.delta-skin .playbar{height:calc(44px + env(safe-area-inset-top));padding-top:calc(4px + env(safe-area-inset-top));padding-left:calc(5px + env(safe-area-inset-left));padding-right:calc(5px + env(safe-area-inset-right))}

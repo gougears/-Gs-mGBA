@@ -237,10 +237,11 @@ function updateExternalDisplay(){
 $('externalscale').onchange=e=>{settings.externalScale=[100,90,80,70].includes(+e.target.value)?+e.target.value:100;updateExternalDisplay();remember();};
 $('externalmenu').onclick=()=>{$('externalmenu').hidden=true;$('settingsopen').onclick();};
 $('screen').onclick=()=>{if(externalDisplay()&&startupStarted&&!paused)$('externalmenu').hidden=!$('externalmenu').hidden;};
-function landscapeSkin(){return settings.skin!=='custom'&&!!window.matchMedia?.('(orientation: landscape)').matches;}
+function landscapeSkin(){return !CELIO_SKINS[settings.skin]?.delta&&settings.skin!=='custom'&&!!window.matchMedia?.('(orientation: landscape)').matches;}
 let portraitSkinHeight=240;
 function fitSkin(){
  const area=$('padarea');
+ if(CELIO_SKINS[settings.skin]?.delta)return fitDeltaSkin();
  if(settings.skin==='custom'){
   const player=$('player'),portrait=!window.matchMedia?.('(orientation: landscape)').matches;
   if(portrait){const width=player.clientWidth||area.clientWidth,padding=parseFloat(window.getComputedStyle?.(player).paddingTop||0)+parseFloat(window.getComputedStyle?.(player).paddingBottom||0);const height=Math.max(1,(player.clientHeight||10000)-padding-($('playerlabel').parentElement?.offsetHeight||44)-width*2/3);area.style.width=width+'px';area.style.height=height+'px';area.style.flex='0 0 auto';area.style.aspectRatio='';}
@@ -260,11 +261,12 @@ function fitSkin(){
  area.style.width=fitted+'px';area.style.height=(fitted*skin.size.height/skin.size.width)+'px';area.style.flex='0 0 auto';area.style.aspectRatio=skin.size.width+'/'+skin.size.height;
 }
 function drawSkin(){
- clearKeys();directionResets.clear();updateExternalDisplay();const area=$('padarea');$('player').classList.toggle('landscape-skin',landscapeSkin());area.querySelectorAll('.skin-art,.skin-hit').forEach(n=>n.remove());area.classList.toggle('skin-mode',settings.skin!=='custom');fitSkin();
+ clearKeys();directionResets.clear();updateExternalDisplay();$('player').classList.toggle('delta-skin',!!CELIO_SKINS[settings.skin]?.delta&&!externalDisplay());const area=$('padarea');$('player').classList.toggle('landscape-skin',landscapeSkin());area.querySelectorAll('.skin-art,.skin-hit').forEach(n=>n.remove());area.classList.toggle('skin-mode',settings.skin!=='custom');fitSkin();
  if(settings.skin==='custom'){
  const group=document.querySelector('.dpad');group.querySelectorAll('.direction-overlay').forEach(n=>n.remove());
  const b=document.createElement('div');b.className='direction-overlay'+(settings.direction==='stick'?' stick-control':'');b.setAttribute('aria-label',settings.direction==='stick'?'スティック':'十字キー');bindDirection(b,settings.direction==='stick');group.append(b);addScreenshotHit(area);applyPositions();return;
  }
+ if(CELIO_SKINS[settings.skin]?.delta){drawDeltaSkin();return;}
  const base=CELIO_SKINS[settings.skin],reflow=!landscapeSkin()&&settings.skin!=='Cobalt';
  const lowerLift=0,controlDrop=Math.max(98,Math.min(portraitSkinHeight*.5-124,portraitSkinHeight-282));
  const skin=landscapeSkin()?base.landscape:reflow?{size:{width:320,height:portraitSkinHeight},items:base.items.map(item=>({...item,frame:{...item.frame,y:item.frame.y+(item.frame.y>=188?portraitSkinHeight-270-lowerLift:(!Array.isArray(item.inputs)||['a','b'].includes(item.inputs[0]))?controlDrop:0)}}))}:base,w=skin.size.width,h=skin.size.height;
@@ -715,18 +717,54 @@ syncTurboIndicator();
 // Searchable skin gallery; the native selector remains available to gamepad users.
 (()=>{
  const select=$('skinselect'),host=document.createElement('section');host.className='skin-browser';
- host.innerHTML='<label class="field">ボールを探す<input id="skinquery" type="search" placeholder="名前で検索（例：ヘビー）"></label><label class="field">種類<select id="skingroup"><option value="all">すべて</option><option value="normal">通常のボール</option><option value="hisui">ヒスイ（アルセウス）</option><option value="other">その他・自由配置</option></select></label><p id="skincount" role="status"></p><div id="skingrid" class="skin-grid"></div>';
+ host.innerHTML='<label class="field">ボールを探す<input id="skinquery" type="search" placeholder="名前で検索（例：ヘビー）"></label><label class="field">種類<select id="skingroup"><option value="all">すべて</option><option value="normal">通常のボール</option><option value="hisui">ヒスイ（アルセウス）</option><option value="delta">読み込んだDeltaスキン</option><option value="other">その他・自由配置</option></select></label><p id="skincount" role="status"></p><div id="skingrid" class="skin-grid"></div>';
  select.closest('label').after(host);
- const entries=[...Object.entries(CELIO_SKINS).map(([key,s])=>({key,name:s.name,group:s.group||(key==='Cobalt'?'other':'normal'),preview:true})),{key:'custom',name:'自由配置',group:'other'}];
- select.replaceChildren();for(const [g,label]of [['normal','通常のボール'],['hisui','ヒスイ（アルセウス）'],['other','その他']]){const opt=document.createElement('optgroup');opt.label=label;for(const e of entries.filter(e=>e.group===g)){const o=document.createElement('option');o.value=e.key;o.textContent=e.name;opt.append(o);}select.append(opt);}select.value=settings.skin;
+ let entries=[];
+ function rebuild(){entries=[...Object.entries(CELIO_SKINS).map(([key,s])=>({key,name:s.name,group:s.group||(key==='Cobalt'?'other':'normal'),preview:true})),{key:'custom',name:'自由配置',group:'other'}];
+ select.replaceChildren();for(const [g,label]of [['normal','通常のボール'],['hisui','ヒスイ（アルセウス）'],['delta','読み込んだDeltaスキン'],['other','その他']]){const opt=document.createElement('optgroup');opt.label=label;for(const e of entries.filter(e=>e.group===g)){const o=document.createElement('option');o.value=e.key;o.textContent=e.name;opt.append(o);}select.append(opt);}select.value=settings.skin;}
  const norm=s=>s.normalize('NFKC').replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+96)).toLowerCase();
  function skinPreview(key){
   const base=CELIO_SKINS[key],preview=document.createElement('span');preview.className='skin-controller-preview';preview.setAttribute('aria-hidden','true');preview.style.background=base.bodyColor||'#eaf2f3';
   const layer=(src,top,height)=>{const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';img.style.cssText='position:absolute;left:0;width:100%;height:'+height+'%;top:'+top+'%;object-fit:fill;border-radius:0';preview.append(img);};
-  if(key==='Cobalt')layer('skins/Cobalt.svg',0,100);
+  if(base.delta){const r=base.layouts.portrait||base.layouts.landscape;preview.style.aspectRatio=r.size.width+'/'+r.size.height;layer(r.art,r.artFrame.y/r.size.height*100,r.artFrame.height/r.size.height*100);}
+  else if(key==='Cobalt')layer('skins/Cobalt.svg',0,100);
   else{const h=400,drop=Math.max(98,Math.min(h*.5-124,h-282));layer(base.artBody||'skins/'+key+'-body.svg',0,250/h*100);layer(base.artActions||'skins/'+key+'-actions.svg',(h-80)/h*100,80/h*100);layer(base.artControls||'skins/'+key+'-controls.svg',drop/h*100,240/h*100);}
   return preview;
  }
- function render(){const query=norm($('skinquery').value),group=$('skingroup').value;const list=entries.filter(e=>(group==='all'||e.group===group)&&norm(e.name).includes(query));$('skincount').textContent=list.length+'種類 · 選択中：'+(entries.find(e=>e.key===settings.skin)?.name||'');const grid=$('skingrid');grid.replaceChildren();for(const e of list){const b=document.createElement('button');b.type='button';b.className='skin-card';b.dataset.skin=e.key;b.setAttribute('aria-pressed',String(settings.skin===e.key));if(e.preview){b.append(skinPreview(e.key));}const name=document.createElement('span');name.textContent=e.name;b.append(name);b.onclick=()=>{select.value=e.key;select.dispatchEvent(new Event('change',{bubbles:true}));const chosen=[...grid.children].find(n=>n.dataset.skin===e.key);chosen?.focus({preventScroll:true});};grid.append(b);}if(!list.length)grid.textContent='一致するスキンがありません。検索文字や種類を変更してください。';}
+ function render(){rebuild();const query=norm($('skinquery').value),group=$('skingroup').value;const list=entries.filter(e=>(group==='all'||e.group===group)&&norm(e.name).includes(query));$('skincount').textContent=list.length+'種類 · 選択中：'+(entries.find(e=>e.key===settings.skin)?.name||'');const grid=$('skingrid');grid.replaceChildren();for(const e of list){const b=document.createElement('button');b.type='button';b.className='skin-card';b.dataset.skin=e.key;b.setAttribute('aria-pressed',String(settings.skin===e.key));if(e.preview){b.append(skinPreview(e.key));}const name=document.createElement('span');name.textContent=e.name;b.append(name);b.onclick=()=>{select.value=e.key;select.dispatchEvent(new Event('change',{bubbles:true}));const chosen=[...grid.children].find(n=>n.dataset.skin===e.key);chosen?.focus({preventScroll:true});};grid.append(b);}if(!list.length)grid.textContent='一致するスキンがありません。検索文字や種類を変更してください。';}
  window.refreshSkinGallery=render;$('skinquery').oninput=render;$('skingroup').onchange=render;select.addEventListener('change',render);$('settingsopen').addEventListener('click',render);render();
+})();
+
+// Imported layouts retain Delta's coordinate space for artwork, screen, and input.
+function deltaLayout(){const s=CELIO_SKINS[settings.skin];return s.layouts[matchMedia('(orientation: landscape)').matches?'landscape':'portrait']||s.layouts.portrait||s.layouts.landscape;}
+function fitDeltaSkin(){
+ const p=$('player'),area=$('padarea');if(externalDisplay())return;
+ const r=deltaLayout(),bar=document.querySelector('.playbar'),top=bar.offsetHeight||44,w=p.clientWidth,h=p.clientHeight-top-(parseFloat(getComputedStyle(p).paddingBottom)||0);
+ const scale=Math.min(w/r.size.width,h/r.size.height),width=r.size.width*scale,height=r.size.height*scale,x=(w-width)/2,y=top+(h-height)/2;
+ for(const [k,v]of Object.entries({x,y,w:width,h:height,sx:x+r.screen.x*scale,sy:y+r.screen.y*scale,sw:r.screen.width*scale,sh:r.screen.height*scale}))p.style.setProperty('--delta-'+k,v+'px');
+ area.style.width='';area.style.height='';area.style.flex='';area.style.aspectRatio='';
+}
+function drawDeltaSkin(){
+ const area=$('padarea'),r=deltaLayout(),art=document.createElement('img');art.className='skin-art';art.src=r.art;art.alt=CELIO_SKINS[settings.skin].name+'のコントローラー';art.draggable=false;Object.assign(art.style,{top:r.artFrame.y/r.size.height*100+'%',height:r.artFrame.height/r.size.height*100+'%'});area.append(art);
+ const keymap={a:0,b:1,select:2,start:3,right:4,left:5,up:6,down:7,r:8,l:9};
+ for(const item of r.items){const directional=!Array.isArray(item.inputs),b=document.createElement(directional?'div':'button');b.className='skin-hit';const f=item.frame;Object.assign(b.style,{left:f.x/r.size.width*100+'%',top:f.y/r.size.height*100+'%',width:f.width/r.size.width*100+'%',height:f.height/r.size.height*100+'%'});
+  const name=directional?'dpad':item.inputs[0];b.setAttribute('aria-label',({dpad:'十字キー',menu:'設定',quickSave:'クイックセーブ',quickLoad:'クイックロード',toggleFastForward:'倍速切替',fastForward:'倍速切替',screenshot:'撮影'})[name]||item.inputs.join('＋').toUpperCase());
+  if(directional)bindDirection(b,settings.direction==='stick');
+  else if(item.inputs.every(n=>n in keymap)){b.dataset.keys=item.inputs.map(n=>keymap[n]).join(',');bindKey(b);}
+  else b.onclick=()=>{if(name==='menu')$('settingsopen').onclick();else if(name==='quickSave')quickSaveSelected();else if(name==='quickLoad')quickLoadSelected();else if(name==='screenshot')requestCapture();else if((name==='toggleFastForward'||name==='fastForward')&&loaded)toggleTurbo();};
+  area.append(b);
+ }
+}
+(()=>{
+ const host=document.createElement('section');host.className='settings-card delta-import';
+ host.innerHTML='<h3>Deltaスキンの読込</h3><label class="filebutton">.deltaskinを選ぶ<input id="deltaskinfile" type="file" accept=".deltaskin,.zip,application/zip"></label><p>GBA用・PNG／JPEG／PDFに対応。画像・ボタン・ゲーム画面の位置を適用し、この端末に保存します。</p><p id="deltaskinstatus" role="status"></p>';
+ $('skinselect').closest('label').before(host);
+ const fallback=document.createElement('button');fallback.id='deltamenu';fallback.type='button';fallback.textContent='設定';fallback.onclick=()=>{$('settingsopen').onclick();};document.querySelector('.playbar').append(fallback);
+ let wanted;try{wanted=JSON.parse(localStorage.getItem('celio-settings-v4')||'{}').skin;}catch{}
+ DeltaSkins.ready.then(()=>{if(wanted?.startsWith('delta:')&&CELIO_SKINS[wanted]){settings.skin=wanted;drawSkin();syncSettings();}window.refreshSkinGallery?.();}).catch(()=>{$('deltaskinstatus').textContent='端末内のスキン保存を利用できません。Safariで開いてください。';});
+ $('deltaskinfile').onchange=async e=>{const file=e.target.files[0];if(!file)return;const status=$('deltaskinstatus');e.target.disabled=true;status.textContent='スキンを読み込んでいます…';
+  try{const key=await DeltaSkins.importFile(file);settings.skin=key;window.refreshSkinGallery?.();drawSkin();syncSettings();remember();const skin=CELIO_SKINS[key],warnings=[...new Set(Object.values(skin.layouts).flatMap(r=>r.warnings))];status.textContent=skin.name+'を適用しました。'+(Object.keys(skin.layouts).length===1?'未収録の向きでは同じ配置を縮小表示します。':'')+(warnings.length?'未対応の操作：'+warnings.join('、'):'');}
+  catch(err){status.textContent='読込できません：'+(err.message||'ファイルを確認してください。');}
+  finally{e.target.disabled=false;e.target.value='';}
+ };
 })();
