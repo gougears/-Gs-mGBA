@@ -542,7 +542,7 @@ renderPadSettings();
 const settingsTabNames=['rom','saves','settings','network','info','gamepad'];let activeSettingsTab='rom';
 function selectSettingsTab(name){
  cancelGameRestart();
- if(['controls','audio','system','rapid'].includes(name)){openGeneralSection(name);name='settings';}if(!settingsTabNames.includes(name))return;if(name!==activeSettingsTab)$('settingscontent').scrollTop=0;activeSettingsTab=name;
+ if(['controls','audio','system','rapid','guide'].includes(name)){openGeneralSection(name);name='settings';}if(!settingsTabNames.includes(name))return;if(name!==activeSettingsTab)$('settingscontent').scrollTop=0;activeSettingsTab=name;
  for(const k of settingsTabNames){$('page-'+k).hidden=k!==name;$('tab-'+k).setAttribute('aria-selected',String(k===name));$('tab-'+k).tabIndex=k===name?0:-1;}
  renderLayoutPreview();
 }
@@ -674,8 +674,8 @@ $('startgame').onclick=()=>{
  else{$('startmessage').textContent='読み込みが終わり次第、自動で開始します…';$('startgame').textContent='起動を準備しています…';}
 };
 
-function openGeneralSection(name){for(const key of ['controls','audio','system','rapid']){$('page-'+key).hidden=key!==name;$('open-'+key).setAttribute('aria-expanded',String(key===name));}if(name==='controls')renderLayoutPreview();}
-for(const key of ['controls','audio','system','rapid'])$('open-'+key).onclick=()=>{const open=$('page-'+key).hidden;for(const k of ['controls','audio','system','rapid']){$('page-'+k).hidden=true;$('open-'+k).setAttribute('aria-expanded','false');}if(open)openGeneralSection(key);};
+function openGeneralSection(name){for(const key of ['controls','audio','system','rapid','guide']){$('page-'+key).hidden=key!==name;$('open-'+key).setAttribute('aria-expanded',String(key===name));}if(name==='controls')renderLayoutPreview();}
+for(const key of ['controls','audio','system','rapid','guide'])$('open-'+key).onclick=()=>{const open=$('page-'+key).hidden;for(const k of ['controls','audio','system','rapid','guide']){$('page-'+k).hidden=true;$('open-'+k).setAttribute('aria-expanded','false');}if(open)openGeneralSection(key);};
 function renderLayoutPreview(){const area=$('layoutpreview'),pad=$('padarea');
  if(area.closest('[hidden]')||!area.clientWidth||!pad.clientWidth||!pad.clientHeight)return;
  const pw=pad.clientWidth||320,ph=pad.clientHeight||270;

@@ -1,0 +1,8 @@
+#page-guide .guide-preview{background:#070d16;border:1px solid #496681;border-radius:14px;padding:10px;margin:12px 0;overflow:hidden}
+#guide-stage{position:relative;max-width:390px;margin:auto;overflow:hidden;isolation:isolate}
+#guide-stage .guide-mark{position:absolute;box-sizing:border-box;border:3px solid #ffd76c;border-radius:9px;background:#ffcf4026;box-shadow:0 0 0 2px #101c2e;z-index:2147483647;pointer-events:none}
+#guide-buttons{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0}
+#guide-buttons button{min-height:42px;margin:0;padding:9px 12px}
+#guide-buttons button[aria-pressed=true]{background:#d8f6e9;color:#163a31;border-color:#d8f6e9}
+#page-guide #guide-detail{min-height:5em;background:#101d30;padding:12px;border-radius:9px;line-height:1.8;color:#edf3ff!important}
+#guide-caption{font-size:12px;line-height:1.6}

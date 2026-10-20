@@ -1,15 +1,15 @@
 const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {webcrypto}=require('node:crypto');
 async function test(root,base){
- const stores=new Map(),handlers={};let online=true,broken='',calls=0,claimed=false;
+ const stores=new Map(),handlers={};let online=true,broken='',calls=0,claimed=false,redirect='',reported='';
  const key=r=>typeof r==='string'?r:r.url;
  const caches={has:async n=>stores.has(n),keys:async()=>[...stores.keys()],delete:async n=>stores.delete(n),open:async n=>{
   if(!stores.has(n))stores.set(n,new Map());const m=stores.get(n);
   return {match:async r=>m.get(key(r))?.clone(),put:async(r,v)=>m.set(key(r),v.clone())};
  }};
- const fetch=async r=>{calls++;if(!online)throw Error('offline');const url=new URL(key(r));let rel=decodeURIComponent(url.pathname.slice(new URL(base).pathname.length));if(rel===broken)throw Error('network failure');const p=path.join(root,rel||'index.html');return new Response(fs.readFileSync(p));};
- const self={location:{href:base+'sw.js'},clients:{claim:async()=>{claimed=true;}},addEventListener:(n,f)=>handlers[n]=f};
- vm.runInNewContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),{self,URL,caches,fetch,crypto:webcrypto,Map,Array,Uint8Array,Error,TextDecoder});
+ const fetch=async r=>{calls++;if(!online)throw Error('offline');const url=new URL(key(r));let rel=decodeURIComponent(url.pathname.slice(new URL(base).pathname.length));if(rel===broken)throw Error('network failure');const p=path.join(root,rel||'index.html');const response=new Response(fs.readFileSync(p));if(rel==='index.html'&&redirect)Object.defineProperties(response,{redirected:{value:true},url:{value:redirect}});return response;};
+ const self={location:{href:base+'sw.js'},clients:{claim:async()=>{claimed=true;},matchAll:async()=>[{postMessage:data=>{reported=data.message;}}]},addEventListener:(n,f)=>handlers[n]=f};
+ vm.runInNewContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),{self,URL,caches,fetch,crypto:webcrypto,Map,Array,Uint8Array,Error,TextDecoder,AbortController,setTimeout,clearTimeout});
  async function event(name,more={}){let p;handlers[name]({...more,waitUntil:v=>p=v});await p;}
  async function message(type){let out;await event('message',{data:{type},ports:[{postMessage:x=>out=x}]});return out;}
  async function request(url,method='GET'){let result;handlers.fetch({request:{url,method},respondWith:p=>result=p});return result&&await result;}
@@ -26,6 +26,9 @@ async function test(root,base){
  const cache=stores.values().next().value;cache.delete(base+'app.js');assert.equal((await message('STATUS')).ready,false);
  assert((await message('REPAIR')).error);online=true;assert((await message('REPAIR')).ready);
  stores.clear();broken='app.js';await assert.rejects(event('install'));assert.equal(stores.size,0,'failed install is removed');
+ assert(reported.includes('app.js'));
+ broken='';redirect=base;await event('install');assert((await message('STATUS')).ready,'same-site index redirect is valid');
+ stores.clear();redirect='https://other.example/login';await assert.rejects(event('install'));assert.equal(stores.size,0);assert(reported.includes('転送'));
  console.log(root+': PASS install, offline navigation/query/assets, exclusions, cache deletion/repair, failed install rollback');
 }
 (async()=>{await test(process.argv[2],process.argv[3]);})().catch(e=>{console.error(e);process.exit(1)});

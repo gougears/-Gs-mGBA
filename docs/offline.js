@@ -7,7 +7,8 @@
     set('この環境ではオフライン保存を利用できません。Safariで開いてください。');
     save.disabled = true; return;
   }
-  let registration, busy = false;
+  let registration, busy = false, lastError = '';
+  navigator.serviceWorker.addEventListener('message', ({data}) => { if(data?.type === 'OFFLINE_ERROR'){lastError=data.message;set('保存できません：'+lastError);} });
   function ask(worker, type) {
     return new Promise((resolve, reject) => {
       const channel = new MessageChannel();
@@ -18,6 +19,7 @@
   }
   async function refresh() {
     if (busy || !registration) return;
+    if(lastError){set('保存できません：'+lastError);return;}
     if (registration.waiting) {
       set('更新版の保存完了。ゲームをセーブして、このアプリの画面・タブをすべて閉じ、開き直すと更新されます。'); return;
     }
@@ -31,7 +33,7 @@
   function watch() {
     const worker = registration.installing;
     if (worker) worker.addEventListener('statechange', () => {
-      if (worker.state === 'redundant') set('保存に失敗しました。通信状態・空き容量を確認して再試行してください。');
+      if (worker.state === 'redundant') set('保存に失敗しました：'+(lastError||'通信状態・空き容量を確認して再試行してください。'));
       else refresh();
     });
     refresh();
@@ -41,17 +43,17 @@
     registration.addEventListener('updatefound', watch); watch();
   }
   save.addEventListener('click', async () => {
-    busy = true; save.disabled = true; set('オフライン保存・更新を確認中…');
+    lastError = ''; busy = true; save.disabled = true; set('オフライン保存・更新を確認中…');
     try {
       if (!registration) await register();
       await registration.update();
       if (!registration.installing && !registration.waiting && registration.active) await ask(registration.active, 'REPAIR');
-    } catch (error) { set('保存できませんでした。オンラインで再試行してください。'); }
+    } catch (error) { lastError=error.name+': '+error.message; set('保存できません：'+lastError); }
     finally { busy = false; save.disabled = false; await refresh(); }
   });
   navigator.serviceWorker.addEventListener('controllerchange', refresh);
   window.addEventListener('online', refresh); window.addEventListener('offline', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   document.getElementById('clearcache')?.addEventListener('click', () => set('キャッシュ削除後はオフラインで起動できません。オンラインで「保存・更新を確認」を押してください。'));
-  register().catch(() => set('オフライン保存を開始できませんでした。オンラインで「保存・更新を確認」を押してください。'));
+  register().catch(error => {lastError=error.name+': '+error.message;set('保存を開始できません：'+lastError);});
 })();
