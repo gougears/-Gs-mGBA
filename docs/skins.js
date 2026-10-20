@@ -19,6 +19,7 @@ const variants=[
 ['DuskBall','ダークボール','#395a41','#30353d','dusk'],
 ['HealBall','ヒールボール','#eda6c4','#f6dfa9','heal'],
 ['StrangeBall','ストレンジボール','#88c9b4','#c0e2cf','strange'],
+['OriginBall','オリジンボール','#db493f','#b92f36','origin','hisui'],
 ['HisuiPokeBall','モンスターボール','#b94035','#b99965','plain','hisui'],
 ['HisuiGreatBall','スーパーボール','#35608a','#b99965','great','hisui'],
 ['HisuiUltraBall','ハイパーボール','#383d43','#b99965','ultra','hisui'],
@@ -32,6 +33,7 @@ const variants=[
 const path=(d,c,w)=>`<path d="${d}" fill="${w?'none':c}" ${w?`stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`:''}/>`;
 const circle=(x,y,r,c)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`;
 function motif(type){switch(type){
+case 'origin':return path('M0 10Q70 5 94 58L114 115M320 10Q250 5 226 58L206 115','#d8bf78',13)+path('M130 0L160 27 190 0M140 55L160 70 180 55','#efda96',7)+path('M20 8L53 8 110 110 80 110Z','#f87b66');
 case 'camo':return path('M0 10Q45 0 70 35T135 35L110 80 25 70Z','#596d42')+path('M195 5L255 15 280 55 230 80 175 50Z','#d1ba75')+path('M290 45L320 30V105L275 115 250 80Z','#596d42');
 case 'bolt':return path('M105 0L65 65H100L80 115 145 45H112L140 0Z','#ffe28a')+path('M225 0L185 65H220L200 115 265 45H232L260 0Z','#ffe28a');
 case 'level':return path('M0 0H320V30H0Z','#303741')+path('M115 37L160 92 205 37','#cb3f39',19);
@@ -55,6 +57,6 @@ case 'metal':case 'gigaton':return [35,100,220,285].map(x=>circle(x,35,12,'#b4ad
 default:return '';
 }}
 function svg(w,h,body){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">${body}</svg>`);}
-function face(v){const [key,name,top,bottom,type,group]=v;const band=type==='premier'?'#d44845':group==='hisui'?'#594d38':'#263440';let wood=group==='hisui'&&!['metal','gigaton'].includes(type)?[143,160,180,199].map(y=>path(`M0 ${y}Q85 ${y-9} 160 ${y}T320 ${y}`, '#9a7a4b',2)).join(''):'';return `<rect width="320" height="240" fill="${bottom}"/><path d="M0 0H320V122H0Z" fill="${top}"/>${motif(type)}${wood}<path d="M0 118H320" stroke="${band}" stroke-width="9"/>${circle(160,118,21,band)}${circle(160,118,14,group==='hisui'?'#c3a777':'#f4f4e9')}${circle(160,118,7,group==='hisui'?'#725d3c':'#b2bcc4')}`;}
+function face(v){const [key,name,top,bottom,type,group]=v;const band=type==='origin'?'#c7ad68':type==='premier'?'#d44845':group==='hisui'?'#594d38':'#263440';let wood=group==='hisui'&&!['metal','gigaton','origin'].includes(type)?[143,160,180,199].map(y=>path(`M0 ${y}Q85 ${y-9} 160 ${y}T320 ${y}`, '#9a7a4b',2)).join(''):'';return `<rect width="320" height="240" fill="${bottom}"/><path d="M0 0H320V122H0Z" fill="${top}"/>${motif(type)}${wood}<path d="M0 118H320" stroke="${band}" stroke-width="9"/>${circle(160,118,21,band)}${circle(160,118,14,group==='hisui'?'#c3a777':'#f4f4e9')}${circle(160,118,7,group==='hisui'?'#725d3c':'#b2bcc4')}`;}
 for(const v of variants){const [key,name,top,bottom,type,group]=v,base=JSON.parse(JSON.stringify(CELIO_SKINS.PokeBall));base.name=name+(group==='hisui'?'（ヒスイ）':'');base.group=group||'normal';base.bodyColor=bottom;const art=face(v);base.preview=svg(320,240,art);let labels='';const box=(x,y,w,h,text)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#273a4b" stroke="#8294a1"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#f5f6ed">${text}</text>`;for(const [x,y,w,h,t] of [[8,3,92,28,'Q.SAVE'],[114,3,92,28,'TURBO'],[220,3,92,28,'Q.LOAD'],[6,47,100,36,'L'],[116,47,88,36,'MENU'],[214,47,100,36,'R']])labels+=box(x,y,w,h,t);base.artBody=svg(320,250,`<rect width="320" height="250" fill="${bottom}"/><g transform="translate(0 66)">${art}</g>${labels}`);base.artControls='skins/PokeBall-controls.svg';base.artActions='skins/PokeBall-actions.svg';let land=`<rect width="812" height="375" rx="18" fill="${bottom}"/><svg x="0" y="0" width="812" height="375" viewBox="0 0 320 240" preserveAspectRatio="none">${art}</svg>`;for(const item of base.landscape.items){const f=item.frame;if(Array.isArray(item.inputs)){const k=item.inputs.join('+');land+=box(f.x,f.y,f.width,f.height,({menu:'MENU',quickSave:'Q.SAVE',quickLoad:'Q.LOAD',toggleFastForward:'TURBO'})[k]||k.toUpperCase());}else{const x=f.x,y=f.y,w=f.width,h=f.height;land+=path(`M${x+w/3} ${y}h${w/3}v${h/3}h${w/3}v${h/3}h-${w/3}v${h/3}h-${w/3}v-${h/3}h-${w/3}v-${h/3}h${w/3}Z`,'#273a4b');}}base.artLandscape=svg(812,375,land);CELIO_SKINS[key]=base;}
 })();
