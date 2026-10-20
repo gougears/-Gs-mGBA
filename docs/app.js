@@ -757,7 +757,7 @@ function drawDeltaSkin(){
 }
 (()=>{
  const host=document.createElement('section');host.className='settings-card delta-import';
- host.innerHTML='<h3>Deltaスキンの読込</h3><label class="filebutton">.deltaskinを選ぶ<input id="deltaskinfile" type="file" accept=".deltaskin,.zip,application/zip"></label><p>GBA用・PNG／JPEG／PDFに対応。画像・ボタン・ゲーム画面の位置を適用し、この端末に保存します。</p><p id="deltaskinstatus" role="status"></p>';
+ host.innerHTML='<h3>Deltaスキンの読込</h3><label class="filebutton">.deltaskinを選ぶ<input id="deltaskinfile" type="file"></label><p>GBA用・PNG／JPEG／PDFに対応。画像・ボタン・ゲーム画面の位置を適用し、この端末に保存します。</p><p id="deltaskinstatus" role="status"></p>';
  $('skinselect').closest('label').before(host);
  const fallback=document.createElement('button');fallback.id='deltamenu';fallback.type='button';fallback.textContent='設定';fallback.onclick=()=>{$('settingsopen').onclick();};document.querySelector('.playbar').append(fallback);
  let wanted;try{wanted=JSON.parse(localStorage.getItem('celio-settings-v4')||'{}').skin;}catch{}
