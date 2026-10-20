@@ -13,7 +13,7 @@
  window.visualViewport?.addEventListener('resize',fit);addEventListener('resize',fit);addEventListener('orientationchange',fit);fit();
  for(const [id,label] of Object.entries({'open-controls':'操作・スキン・ボタン配置','open-audio':'音量・倍速','open-system':'端末・オフライン・更新','open-rapid':'連射の設定','open-guide':'使い方・操作ガイド'}))$(id).textContent=label;
  // Keep all categories adjacent to their content; prioritize everyday settings.
- const general=$('page-settings');for(const key of ['display','controls','audio','rapid','cheats','memory','system','guide']){general.append($('open-'+key),$('page-'+key));}
+ const general=$('page-settings');for(const key of ['display','controls','rapid','audio']){general.append($('open-'+key),$('page-'+key));}
  const status=$('cheatstatus');let context='',rows=[],applied='',button=false,revision=0,clearedPeers=new WeakSet();
  function load(){if(context===romKey)return;context=romKey;rows=[];applied='';button=false;revision++;
   try{const data=JSON.parse(localStorage.getItem('gs-cheats:'+context)||'[]');if(Array.isArray(data))rows=data.filter(r=>typeof r.code==='string'&&typeof r.name==='string'&&[0,1,2,3,4].includes(r.type)).slice(0,100);}catch{}
@@ -41,9 +41,9 @@
    const result=install(row);applied='';sync();if(result<1)throw Error((-result)+'行目付近を解釈できません。形式と複数行コードを確認してください。');rows.push(row);save();render();$('cheatcode').value='';$('cheatname').value='';status.textContent='登録しました。左のチェックでONにできます。';
   }catch(e){status.textContent=e.message;}};
  $('cheatbutton').onclick=()=>{try{available();button=!button;applied='';sync();render();}catch(e){status.textContent=e.message;}};
- $('open-cheats').addEventListener('click',()=>{load();render();});
+ $('tab-cheats').addEventListener('click',()=>{load();render();});
  // Re-apply after reset/load, even when the ROM identifier is unchanged.
- for(const id of ['topreset-yes','reset-yes','applysave'])$(id).addEventListener('click',()=>{applied='';});
+ for(const id of ['topreset-yes','applysave'])$(id).addEventListener('click',()=>{applied='';});
  for(const id of ['rom','secondrom'])$(id).addEventListener('change',()=>{applied='';});
  function memory(step=0){try{if(!loaded||busy)throw Error('先にROMを開いてください。');let text=$('memaddr').value.trim().replace(/^0x/i,'');if(!/^[0-9a-f]{1,8}$/i.test(text))throw Error('アドレスは8桁以内の16進数で入力してください。');let addr=parseInt(text,16)+step;if(addr<0||addr>0x0fffff00)throw Error('00000000〜0FFFFF00の範囲を指定してください。');addr=Math.floor(addr/16)*16;$('memaddr').value=addr.toString(16).toUpperCase().padStart(8,'0');const width=+$('memwidth').value,lines=[];
   for(let offset=0;offset<256;offset+=16){const bytes=Array.from({length:16},(_,i)=>M._read_mem(addr+offset+i)&255),values=[];for(let i=0;i<16;i+=width){let value=0;for(let j=0;j<width;j++)value+=bytes[i+j]*2**(8*j);values.push(value.toString(16).toUpperCase().padStart(width*2,'0'));}lines.push((addr+offset).toString(16).toUpperCase().padStart(8,'0')+'  '+values.join(' ')+'  '+bytes.map(b=>b>=32&&b<127?String.fromCharCode(b):'.').join(''));}

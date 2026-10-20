@@ -2,6 +2,7 @@
 (() => {
  const byId=id=>document.getElementById(id), panel=byId('page-guide');
  const parts=[
+ ['ROM','右上のROMボタンから、ROMの読込・端末への記憶設定を開きます。','#toprom'],
  ['方向','十字キー・スティックで移動や項目選択。指を離すと入力を止めます。','.skin-hit[aria-label="十字キー"],.skin-hit[aria-label="スティック"],.padgroup[data-group="dpad"]'],
  ['A','ゲームのAボタン。多くのゲームでは決定・調べる操作です。','.skin-hit[data-key="0"],.ab [data-key="0"]'],
  ['B','ゲームのBボタン。多くのゲームではキャンセル・戻る操作です。','.skin-hit[data-key="1"],.ab [data-key="1"]'],
@@ -48,7 +49,7 @@
   byId('guide-caption').textContent='黄色の枠が説明中のボタンです。\nプレビューからゲーム入力は行いません。';
   select(selected);
  }
- byId('open-guide').onclick=()=>{const open=panel.hidden;for(const name of ['controls','audio','system','rapid','guide']){byId('page-'+name).hidden=true;byId('open-'+name).setAttribute('aria-expanded','false');}if(open){previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';panel.hidden=false;byId('open-guide').setAttribute('aria-expanded','true');byId('guide-close').focus({preventScroll:true});requestAnimationFrame(render);}};
+ byId('open-guide').onclick=()=>{if(!panel.hidden){close();return;}previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';panel.hidden=false;byId('open-guide').setAttribute('aria-expanded','true');byId('guide-close').focus({preventScroll:true});requestAnimationFrame(render);};
  function close(){panel.hidden=true;document.body.style.overflow=previousOverflow;byId('open-guide').setAttribute('aria-expanded','false');byId('open-guide').focus({preventScroll:true});}
  byId('guide-close').onclick=close;
  panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'){const buttons=[...panel.querySelectorAll('button,select')];const first=buttons[0],last=buttons[buttons.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});

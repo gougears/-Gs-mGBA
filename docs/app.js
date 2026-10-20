@@ -49,7 +49,7 @@ function playerUI(){
  $('playerlabel').textContent='P'+(activePlayer+1);$('playerlabel').disabled=linkMode!=='local'||!players[1-activePlayer].loaded;$('playerlabel').setAttribute('aria-label','プレイヤー'+(activePlayer+1)+'：タップで切替');$('romversion').textContent=romName||'ROM未読込';$('romversion').title=romName||'';
  $('closeplayer2').disabled=!players[1].M;$('switchplayer').hidden=!players[1].M;$('switchplayer').textContent='プレイヤー'+(2-activePlayer)+'へ切替';
  for(let i=0;i<2;i++)$('p'+(i+1)+'info').textContent=(i+1)+'：'+(players[i].romName||'未読込');
- for(const id of ['pause','export','import','reset','topsave','topimport','topexport','topreset'])$(id).disabled=!loaded||!!link?.active&&['import','reset','topimport','topreset'].includes(id);
+ for(const id of ['export','import','topsave','topimport','topexport','topreset'])$(id).disabled=!loaded||!!link?.active&&['import','topimport','topreset'].includes(id);
  $('empty').hidden=loaded;$('rom').disabled=!M||restoringROM;$('firstrom').disabled=!M||restoringROM;$('secondrom').disabled=restoringROM;
 }
 async function selectPlayer(i){
@@ -106,7 +106,7 @@ function scheduleAudioTime(now,duration){
 }
 function consumeAudio(){const n=M._audio_read();if(!audio||audio.state!=='running'||paused||muted||settings.volume===0||!n)return;const scheduled=scheduleAudioTime(audio.currentTime,n/M._audio_rate()/speed);if(scheduled===null)return;const a=M.HEAP16.subarray(M._audio_ptr()/2,M._audio_ptr()/2+n*2),b=audio.createBuffer(2,n,M._audio_rate());for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++)d[i]=a[2*i+ch]/32768;}const s=audio.createBufferSource();s.buffer=b;s.playbackRate.value=speed;s.connect(gain);sounds.add(s);s.onended=()=>{sounds.delete(s);s.disconnect();};s.start(scheduled);}
 function clearKeys(){stopRapid();for(const reset of directionResets)reset();held.clear();keys=0;document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));}
-function pause(value){paused=value||!startupStarted;$('pauseoverlay').hidden=!paused||!loaded;last=0;acc=0;clearKeys();$('pause').textContent=paused?'再開':'一時停止';$('onlinepausenote').hidden=!(paused&&linkMode==='online'&&link?.active);flushAudio();if(paused){if(link?.active&&linkMode!=='online')link.disconnect('一時停止したため通信を終了しました。');persistBoth();}else audioStart();}
+function pause(value){paused=value||!startupStarted;$('pauseoverlay').hidden=!paused||!loaded;last=0;acc=0;clearKeys();$('onlinepausenote').hidden=!(paused&&linkMode==='online'&&link?.active);flushAudio();if(paused){if(link?.active&&linkMode!=='online')link.disconnect('一時停止したため通信を終了しました。');persistBoth();}else audioStart();}
 function updateTurboButton(button){
  if(!button)return;
  const on=speed>1;button.classList.add('turbo-state');button.classList.toggle('turbo-on',on);
@@ -120,10 +120,10 @@ function loop(t){requestAnimationFrame(loop);pollGamepad();const onlineHold=paus
 function openPanel(id){if(id==='quickpanel'||id==='savepanel')selectSettingsTab('saves');if(id==='netpanel')selectSettingsTab('network');clearKeys();$('settingspanel').hidden=false;$(id).hidden=false;renderLayoutPreview();$(id).scrollIntoView({behavior:'smooth',block:'nearest'});if(externalPadConnected&&id==='settingspanel'){padNavZone='tabs';focusPadSetting($('tab-'+activeSettingsTab));}}
 function closeSettings(){cancelGameRestart();closePadChoices(false);clearPadFocus();$('settingspanel').hidden=true;clearKeys();applyPositions();if(loaded&&!paused)audioStart();}
 for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>{if(b.dataset.close==='settingspanel')closeSettings();else $(b.dataset.close).hidden=true;};
-$('rom').onchange=async e=>{const file=e.target.files[0];e.target.value='';if(!file||busy)return;audioStart();busy=true;try{if(!/\.(gba|bin)$/i.test(file.name))throw Error('.gbaファイルを選んでください。ZIPは先に解凍してください');if(file.size<192||file.size>67108864||(file.size>33554432&&file.size!==67108864))throw Error('ROMは32MiB以下、またはちょうど64MiBにしてください');link?.disconnect('ROM変更のため未接続');closeSavePanel();cancelQuick();tell('ROMを端末内で読み込み中…');await persist();const bytes=e.rememberedBytes||new Uint8Array(await file.arrayBuffer());const digest=/^[a-f0-9]{64}$/.test(e.rememberedDigest||'')?e.rememberedDigest:Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');const key=digest+(activePlayer===1?':player2':'');loaded=false;if(!alloc(compatibleROM(bytes),(p,n)=>M._start(p,n)))throw Error('ROMを起動できません');loaded=true;romKey=key;romName=file.name;quickNamespace='name:'+activePlayer+':'+normalizedROMName(romName);await migrateNamedQuick(bytes);let saved;try{saved=await dbOp('saves','get',key);}catch{}if(saved&&!alloc(new Uint8Array(saved),(p,n)=>M._restore(p,n)))throw Error('端末内セーブを復元できません');M._reset_game();if(settings.rememberROM&&!restoringROM){try{await dbOp('roms','put',activePlayer,{name:file.name,bytes,digest});$('rommemorystatus').textContent='プレイヤー'+(activePlayer+1)+'のROMを端末内に記憶しました。';}catch(e){$('rommemorystatus').textContent='ROMを記憶できません：'+e.message;}}backupTimes.set(key,Date.now());$('empty').hidden=true;for(const id of ['pause','export','import','reset','topsave','topimport','topexport','topreset'])$(id).disabled=false;pause(false);capturePlayer();playerUI();quickCache=[];closeSettings();tell('プレイヤー'+(activePlayer+1)+' · '+file.name+' · '+(saved?'端末内セーブを復元':'実行中')+' · ROM送信なし');}catch(err){tell(err.message);selectSettingsTab('rom');openPanel('settingspanel');}finally{busy=false;capturePlayer();playerUI();}};
+$('rom').onchange=async e=>{const file=e.target.files[0];e.target.value='';if(!file||busy)return;audioStart();busy=true;try{if(!/\.(gba|bin)$/i.test(file.name))throw Error('.gbaファイルを選んでください。ZIPは先に解凍してください');if(file.size<192||file.size>67108864||(file.size>33554432&&file.size!==67108864))throw Error('ROMは32MiB以下、またはちょうど64MiBにしてください');link?.disconnect('ROM変更のため未接続');closeSavePanel();cancelQuick();tell('ROMを端末内で読み込み中…');await persist();const bytes=e.rememberedBytes||new Uint8Array(await file.arrayBuffer());const digest=/^[a-f0-9]{64}$/.test(e.rememberedDigest||'')?e.rememberedDigest:Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');const key=digest+(activePlayer===1?':player2':'');loaded=false;if(!alloc(compatibleROM(bytes),(p,n)=>M._start(p,n)))throw Error('ROMを起動できません');loaded=true;romKey=key;romName=file.name;quickNamespace='name:'+activePlayer+':'+normalizedROMName(romName);await migrateNamedQuick(bytes);let saved;try{saved=await dbOp('saves','get',key);}catch{}if(saved&&!alloc(new Uint8Array(saved),(p,n)=>M._restore(p,n)))throw Error('端末内セーブを復元できません');M._reset_game();if(settings.rememberROM&&!restoringROM){try{await dbOp('roms','put',activePlayer,{name:file.name,bytes,digest});$('rommemorystatus').textContent='プレイヤー'+(activePlayer+1)+'のROMを端末内に記憶しました。';}catch(e){$('rommemorystatus').textContent='ROMを記憶できません：'+e.message;}}backupTimes.set(key,Date.now());$('empty').hidden=true;for(const id of ['export','import','topsave','topimport','topexport','topreset'])$(id).disabled=false;pause(false);capturePlayer();playerUI();quickCache=[];closeSettings();tell('プレイヤー'+(activePlayer+1)+' · '+file.name+' · '+(saved?'端末内セーブを復元':'実行中')+' · ROM送信なし');}catch(err){tell(err.message);selectSettingsTab('rom');openPanel('settingspanel');}finally{busy=false;capturePlayer();playerUI();}};
 $('firstrom').onchange=e=>$('rom').onchange(e);
 $('secondrom').onchange=async e=>{const file=e.target.files[0];e.target.value='';if(!file||busy)return;audioStart();if(link?.active)link.disconnect('ROM変更のため通信を終了しました。');await selectPlayer(1);if(activePlayer===1)await $('rom').onchange({target:{files:[file],value:''}});};
-$('pause').onclick=()=>{if(busy||!loaded)return;pause(!paused);if(paused)closeSettings();};
+
 $('pauseoverlay').onclick=()=>{if(!loaded||!paused||busy||!$('settingspanel').hidden)return;pause(false);};
 function toggleTurbo(){if(link?.active)return gameNotice('通信中は1倍速で動作します。');setSpeed(speed===1?settings.turbo:1);}
 $('audiomode').onchange=e=>{settings.audioMode=e.target.value==='lowlatency'?'lowlatency':'recording';remember();audioNeedsRebuild=true;audioStart();};
@@ -167,8 +167,8 @@ $('import').onchange=async e=>{
 };
 $('applysave').onclick=async()=>{if(!pendingSave||!loaded||busy)return;busy=true;$('applysave').disabled=true;try{await persist();if(!alloc(pendingSave,(p,n)=>M._restore(p,n)))throw Error('セーブを取り込めませんでした');M._reset_game();await persist();closeSavePanel();pause(false);closeSettings();gameNotice('セーブを反映しました。ゲームの「つづきから」を選んでください。');}catch(e){gameNotice('読み込み失敗：'+e.message);savePanel('読み込みを完了できませんでした。再度お試しください。');$('applysave').hidden=false;$('applysave').disabled=false;}finally{busy=false;}};
 let pendingRestart=null;
-function cancelGameRestart(){pendingRestart=null;for(const id of ['reset','topreset'])$(id+'-confirm').hidden=true;}
-function requestGameRestart(id='reset'){
+function cancelGameRestart(){pendingRestart=null;for(const id of ['topreset'])$(id+'-confirm').hidden=true;}
+function requestGameRestart(id='topreset'){
  if(!loaded||busy)return;
  if(link?.active)return gameNotice('通信を終了してからゲームを再起動してください。');
  audioStart();cancelGameRestart();pendingRestart={target:M,key:romKey,id};
@@ -184,7 +184,7 @@ async function confirmGameRestart(){
  catch(e){gameNotice('再起動できませんでした：'+e.message);}
  finally{busy=false;last=0;acc=0;capturePlayer();playerUI();}
 }
-for(const id of ['reset','topreset']){
+for(const id of ['topreset']){
  $(id).onclick=()=>requestGameRestart(id);
  $(id+'-yes').onclick=confirmGameRestart;
  $(id+'-no').onclick=()=>{cancelGameRestart();if(externalPadConnected)focusPadSetting($(id));};
@@ -268,7 +268,7 @@ function drawSkin(){
  }
  if(CELIO_SKINS[settings.skin]?.delta){drawDeltaSkin();return;}
  const base=CELIO_SKINS[settings.skin],reflow=!landscapeSkin()&&settings.skin!=='Cobalt';
- const lowerLift=0,controlDrop=Math.max(98,Math.min(portraitSkinHeight*.5-124,portraitSkinHeight-282));
+ const lowerLift=0,controlDrop=Math.max(32,Math.min(portraitSkinHeight*.5-124,portraitSkinHeight-236));
  const skin=landscapeSkin()?base.landscape:reflow?{size:{width:320,height:portraitSkinHeight},items:base.items.map(item=>({...item,frame:{...item.frame,y:item.frame.y+(item.frame.y>=188?portraitSkinHeight-270-lowerLift:(!Array.isArray(item.inputs)||['a','b'].includes(item.inputs[0]))?controlDrop:0)}}))}:base,w=skin.size.width,h=skin.size.height;
  if(reflow){const rows={"quickSave": {"x": 8, "y": 3, "width": 92, "height": 28}, "toggleFastForward": {"x": 114, "y": 3, "width": 92, "height": 28}, "quickLoad": {"x": 220, "y": 3, "width": 92, "height": 28}, "l": {"x": 6, "y": 47, "width": 100, "height": 36}, "menu": {"x": 116, "y": 47, "width": 88, "height": 36}, "r": {"x": 214, "y": 47, "width": 100, "height": 36}};for(const item of skin.items){const key=Array.isArray(item.inputs)?item.inputs[0]:'';if(rows[key])item.frame={...rows[key]};else if(key==='select'||key==='start')item.frame.y=h-38;}}
  const art=document.createElement(reflow?'div':'img');art.className='skin-art';art.src=landscapeSkin()&&base.artLandscape?base.artLandscape:'skins/'+settings.skin+(landscapeSkin()?'-landscape':'')+'.svg?v=ball50';art.alt=base.name+'のコントローラー';art.draggable=false;
@@ -560,10 +560,11 @@ function pollGamepad(){
 addEventListener('gamepadconnected',pollGamepad);addEventListener('gamepaddisconnected',()=>{held.delete('gamepad');gamepadWasPressed=false;updateKeys();pollGamepad();});
 renderPadSettings();
 
-const settingsTabNames=['rom','saves','settings','network','info','gamepad'];let activeSettingsTab='rom';
+const settingsTabNames=['settings','rom','saves','network','device','cheats','gamepad','info'];let activeSettingsTab='settings';
+const sectionOwners={display:'settings',controls:'settings',audio:'settings',rapid:'settings',memory:'device',system:'device',guide:'info'};
 function selectSettingsTab(name){
  cancelGameRestart();
- if(['display','controls','audio','system','rapid','guide','cheats','memory'].includes(name)){openGeneralSection(name);name='settings';}if(!settingsTabNames.includes(name))return;if(name!==activeSettingsTab)$('settingscontent').scrollTop=0;activeSettingsTab=name;
+ if(sectionOwners[name]){openGeneralSection(name);name=sectionOwners[name];}if(!settingsTabNames.includes(name))return;if(name!==activeSettingsTab)$('settingscontent').scrollTop=0;activeSettingsTab=name;
  for(const k of settingsTabNames){$('page-'+k).hidden=k!==name;$('tab-'+k).setAttribute('aria-selected',String(k===name));$('tab-'+k).tabIndex=k===name?0:-1;}
  renderLayoutPreview();
 }
@@ -695,8 +696,9 @@ $('startgame').onclick=()=>{
  else{$('startmessage').textContent='読み込みが終わり次第、自動で開始します…';$('startgame').textContent='起動を準備しています…';}
 };
 
-function openGeneralSection(name){for(const key of ['display','controls','audio','system','rapid','guide','cheats','memory']){$('page-'+key).hidden=key!==name;$('open-'+key).setAttribute('aria-expanded',String(key===name));}if(name==='controls')renderLayoutPreview();}
-for(const key of ['display','controls','audio','system','rapid','guide','cheats','memory'])$('open-'+key).onclick=()=>{const open=$('page-'+key).hidden;for(const k of ['display','controls','audio','system','rapid','guide','cheats','memory']){$('page-'+k).hidden=true;$('open-'+k).setAttribute('aria-expanded','false');}if(open)openGeneralSection(key);};
+function openGeneralSection(name){for(const key of Object.keys(sectionOwners)){if(sectionOwners[key]!==sectionOwners[name])continue;$('page-'+key).hidden=key!==name;$('open-'+key).setAttribute('aria-expanded',String(key===name));}if(name==='controls')renderLayoutPreview();}
+for(const key of Object.keys(sectionOwners))$('open-'+key).onclick=()=>{const open=$('page-'+key).hidden;if(open)openGeneralSection(key);else{$('page-'+key).hidden=true;$('open-'+key).setAttribute('aria-expanded','false');}};
+$('toprom').onclick=()=>{selectSettingsTab('rom');openPanel('settingspanel');};
 function renderLayoutPreview(){const area=$('layoutpreview'),pad=$('padarea');
  if(area.closest('[hidden]')||!area.clientWidth||!pad.clientWidth||!pad.clientHeight)return;
  const pw=pad.clientWidth||320,ph=pad.clientHeight||270;
