@@ -3,14 +3,19 @@ const CELIO_SKINS={"PokeBall": {"name": "モンスターボール", "size": {"wi
 // Additional ball-inspired skins. Original vector artwork; existing input geometry is reused.
 (()=>{
 const variants=[
-['SafariBall','サファリボール','#9cac69','#ede9ce','camo'],
-['FastBall','スピードボール','#ed6943','#fff4da','bolt'],
-['LevelBall','レベルボール','#e8bb39','#efeee0','level'],
-['LureBall','ルアーボール','#298dad','#eff4f1','lure'],
-['HeavyBall','ヘビーボール','#4d5966','#dce0e4','heavy'],
-['FriendBall','フレンドボール','#63aa51','#f1edd9','friend'],
-['SportBall','コンペボール','#e55a48','#f4eee0','sport'],
-['DreamBall','ドリームボール','#dc65a7','#dcb6df','dream'],
+['MasterBall','マスターボール','#76538e','#f2f0ed','master'],
+['LoveBall','ラブラブボール','#df67a4','#f2f0ed','love'],
+['MoonBall','ムーンボール','#45484a','#f2f0ed','moon'],
+['BeastBall','ウルトラボール','#254b8c','#254b8c','beast'],
+['CherishBall','プレシャスボール','#e64c35','#d8442b','cherish'],
+['SafariBall','サファリボール','#c4a66e','#f0ece5','camo'],
+['FastBall','スピードボール','#e9594a','#f0ece5','bolt'],
+['LevelBall','レベルボール','#393a3d','#f0ece5','level'],
+['LureBall','ルアーボール','#23a7b8','#f0ece5','lure'],
+['HeavyBall','ヘビーボール','#8d999c','#f0ece5','heavy'],
+['FriendBall','フレンドボール','#3fa667','#f0ece5','friend'],
+['SportBall','コンペボール','#ed674e','#f0ece5','sport'],
+['DreamBall','ドリームボール','#f7b6d2','#71518c','dream'],
 ['NetBall','ネットボール','#35a9af','#eef3ed','net'],
 ['NestBall','ネストボール','#84b958','#f0e7b8','nest'],
 ['RepeatBall','リピートボール','#df5540','#f7ecdc','repeat'],
@@ -18,17 +23,17 @@ const variants=[
 ['PremierBall','プレミアボール','#faf8ee','#f7f4eb','premier'],
 ['DuskBall','ダークボール','#395a41','#30353d','dusk'],
 ['HealBall','ヒールボール','#eda6c4','#f6dfa9','heal'],
-['StrangeBall','ストレンジボール','#88c9b4','#c0e2cf','strange'],
-['OriginBall','オリジンボール','#db493f','#b92f36','origin','hisui'],
-['HisuiPokeBall','モンスターボール','#b94035','#b99965','plain','hisui'],
-['HisuiGreatBall','スーパーボール','#35608a','#b99965','great','hisui'],
-['HisuiUltraBall','ハイパーボール','#383d43','#b99965','ultra','hisui'],
-['FeatherBall','フェザーボール','#79bbc8','#ddd9b6','wing','hisui'],
-['WingBall','ウイングボール','#398fac','#d1d0b4','wing','hisui'],
-['JetBall','ジェットボール','#243e58','#a6b5ae','jet','hisui'],
-['HisuiHeavyBall','ヘビーボール','#505b67','#646c74','metal','hisui'],
-['LeadenBall','メガトンボール','#47647b','#777c80','metal','hisui'],
-['GigatonBall','ギガトンボール','#303640','#525862','gigaton','hisui']
+['StrangeBall','ストレンジボール','#60c8ab','#d6ecd9','strange'],
+['OriginBall','オリジンボール','#df3724','#c54126','origin','hisui'],
+['HisuiPokeBall','モンスターボール','#c85121','#d8c79b','plain','hisui'],
+['HisuiGreatBall','スーパーボール','#274c88','#c7b474','great','hisui'],
+['HisuiUltraBall','ハイパーボール','#30333c','#aca477','ultra','hisui'],
+['FeatherBall','フェザーボール','#e5f3eb','#b4a263','wing','hisui'],
+['WingBall','ウイングボール','#2994b6','#aa9861','wing','hisui'],
+['JetBall','ジェットボール','#2693b5','#a18c53','jet','hisui'],
+['HisuiHeavyBall','ヘビーボール','#303637','#626968','metal','hisui'],
+['LeadenBall','メガトンボール','#303235','#525547','metal','hisui'],
+['GigatonBall','ギガトンボール','#282b2c','#343938','gigaton','hisui']
 ];
 const path=(d,c,w)=>`<path d="${d}" fill="${w?'none':c}" ${w?`stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`:''}/>`;
 const circle=(x,y,r,c)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>`;
@@ -57,6 +62,41 @@ case 'metal':case 'gigaton':return [35,100,220,285].map(x=>circle(x,35,12,'#b4ad
 default:return '';
 }}
 function svg(w,h,body){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">${body}</svg>`);}
-function face(v){const [key,name,top,bottom,type,group]=v;const band=type==='origin'?'#c7ad68':type==='premier'?'#d44845':group==='hisui'?'#594d38':'#263440';let wood=group==='hisui'&&!['metal','gigaton','origin'].includes(type)?[143,160,180,199].map(y=>path(`M0 ${y}Q85 ${y-9} 160 ${y}T320 ${y}`, '#9a7a4b',2)).join(''):'';return `<rect width="320" height="240" fill="${bottom}"/><path d="M0 0H320V122H0Z" fill="${top}"/>${motif(type)}${wood}<path d="M0 118H320" stroke="${band}" stroke-width="9"/>${circle(160,118,21,band)}${circle(160,118,14,group==='hisui'?'#c3a777':'#f4f4e9')}${circle(160,118,7,group==='hisui'?'#725d3c':'#b2bcc4')}`;}
-for(const v of variants){const [key,name,top,bottom,type,group]=v,base=JSON.parse(JSON.stringify(CELIO_SKINS.PokeBall));base.name=name+(group==='hisui'?'（ヒスイ）':'');base.group=group||'normal';base.bodyColor=bottom;const art=face(v);base.preview=svg(320,240,art);let labels='';const box=(x,y,w,h,text)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#273a4b" stroke="#8294a1"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#f5f6ed">${text}</text>`;for(const [x,y,w,h,t] of [[8,3,92,28,'Q.SAVE'],[114,3,92,28,'TURBO'],[220,3,92,28,'Q.LOAD'],[6,47,100,36,'L'],[116,47,88,36,'MENU'],[214,47,100,36,'R']])labels+=box(x,y,w,h,t);base.artBody=svg(320,250,`<rect width="320" height="250" fill="${bottom}"/><g transform="translate(0 66)">${art}</g>${labels}`);base.artControls='skins/PokeBall-controls.svg';base.artActions='skins/PokeBall-actions.svg';let land=`<rect width="812" height="375" rx="18" fill="${bottom}"/><svg x="0" y="0" width="812" height="375" viewBox="0 0 320 240" preserveAspectRatio="none">${art}</svg>`;for(const item of base.landscape.items){const f=item.frame;if(Array.isArray(item.inputs)){const k=item.inputs.join('+');land+=box(f.x,f.y,f.width,f.height,({menu:'MENU',quickSave:'Q.SAVE',quickLoad:'Q.LOAD',toggleFastForward:'TURBO'})[k]||k.toUpperCase());}else{const x=f.x,y=f.y,w=f.width,h=f.height;land+=path(`M${x+w/3} ${y}h${w/3}v${h/3}h${w/3}v${h/3}h-${w/3}v${h/3}h-${w/3}v-${h/3}h-${w/3}v-${h/3}h${w/3}Z`,'#273a4b');}}base.artLandscape=svg(812,375,land);CELIO_SKINS[key]=base;}
+
+// Redrawn from the user-specified visual references (see BALL-DESIGN-REFERENCES.md).
+function referenceMotif(key){switch(key){
+case 'SafariBall':return path('M0 12Q42 -5 69 17L51 38 77 54 50 80 13 67 0 85Z M106 0L144 0 157 25 141 42 167 63 142 85 105 61 118 36Z M212 4L254 0 265 31 242 44 267 72 233 105 203 75 221 49 195 28Z M289 15L320 26V113L281 103 293 78 274 58Z','#768870');
+case 'FastBall':return '<ellipse cx="25" cy="88" rx="28" ry="49" fill="#f6d252"/><ellipse cx="295" cy="88" rx="28" ry="49" fill="#f6d252"/>'+path('M123 0H200L172 29H194L139 75 148 42H116L139 20H112Z','#f7d35c');
+case 'FriendBall':return [[69,53,-35],[91,96,-55],[251,53,35],[229,96,55]].map(([x,y,a])=>`<ellipse cx="${x}" cy="${y}" rx="11" ry="21" transform="rotate(${a} ${x} ${y})" fill="#ed6546" stroke="#324637" stroke-width="3"/>`).join('')+circle(160,21,12,'#f0cc56');
+case 'LureBall':return path('M77 0H243Q223 43 205 91L160 114 115 91Q97 43 77 0Z','#ee6e65')+[137,160,183].map(x=>path(`M${x+9} 14l-18 62`,'#644c28',8)+path(`M${x+9} 14l-18 62`,'#efd25b',4)).join('');
+case 'LevelBall':return path('M0 69Q160 95 320 69V122H0Z','#f1cc4b')+path('M125 24L149 65 207 15','#ee6557',20);
+case 'HeavyBall':return [[70,31,21],[105,85,16],[250,31,21],[215,85,16]].map(([x,y,rr])=>circle(x,y,rr+3,'#344856')+circle(x,y,rr,'#286da6')+circle(x-4,y-4,rr*.35,'#76b1de')).join('');
+case 'LoveBall':return path('M160 100C135 82 103 62 103 35C103 1 146 0 160 23C174 0 217 1 217 35C217 62 185 82 160 100Z','#fff3f6')+path('M160 84C140 67 116 54 116 34C116 15 147 13 160 40C173 13 204 15 204 34C204 54 180 67 160 84Z','#f7b7d1');
+case 'MoonBall':return path('M0 0H160V122H0Z','#39bcc5')+path('M196 4C142 -8 112 12 119 37C126 64 171 66 207 44C175 48 149 38 148 22C148 9 168 1 196 4Z','#f2d24d');
+case 'DreamBall':return path('M0 85Q70 0 137 51T260 60Q292 29 320 31V122H0Z','#df76a4')+path('M72 0Q160 -5 183 43T233 97Q267 122 298 105Q240 155 192 101T136 49Q101 20 72 0Z','#f7b5d4');
+case 'BeastBall':return Array.from({length:6},(_,i)=>path(`M${i*67-10} 0Q${i*60+40} 60 ${i*67-10} 240`,'#53c4eb',5)).join('')+[18,55,93,151,197,231].map(y=>path(`M0 ${y}Q160 ${y+35} 320 ${y}`,'#53c4eb',5)).join('')+path('M0 0H50Q54 54 99 94Q26 69 0 0ZM320 0H270Q266 54 221 94Q294 69 320 0ZM0 240H50Q54 185 99 151Q26 174 0 240ZM320 240H270Q266 185 221 151Q294 174 320 240Z','#eddb71');
+case 'SportBall':return circle(160,51,33,'#faf5e8')+circle(160,51,22,'#ed674e')+path('M122 51H198','#faf5e8',8);
+case 'MasterBall':return '<ellipse cx="82" cy="47" rx="34" ry="49" fill="#d665a7"/><ellipse cx="238" cy="47" rx="34" ry="49" fill="#d665a7"/>'+path('M113 91L130 18 160 58 190 18 207 91H188L181 55 160 86 139 55 132 91Z','#f6eef8');
+case 'CherishBall':return path('M0 81Q33 110 43 122M320 81Q287 110 277 122','#612b2b',8);
+case 'StrangeBall':return path('M0 91Q160 122 320 91M0 102Q160 132 320 102','#bbe6cb',6);
+default:return null;
+}}
+function hisuiFace(v){
+ const [key,name,top,bottom]=v,metal=['HisuiHeavyBall','LeadenBall','GigatonBall'].includes(key),origin=key==='OriginBall';
+ let detail='';
+ if(key==='HisuiGreatBall')detail=path('M22 61L66 27 108 58 89 59 65 44 48 61Z M212 58L254 27 298 61 272 61 254 44 231 59Z','#ca582b');
+ if(key==='HisuiUltraBall')detail=path('M25 111L49 15 85 8 109 111Z M211 111L235 8 271 15 295 111Z','#c6a92f')+path('M49 31L82 31M43 54L89 54M37 80L98 80M238 31H268M231 54H277M222 80H286','#e1c65b',3);
+ if(['FeatherBall','WingBall'].includes(key))detail=path('M0 87L66 24 118 75 118 99 65 50 0 112Z M320 87L254 24 202 75 202 99 255 50 320 112Z',key==='FeatherBall'?'#258fb3':'#f1f0d1')+path('M139 28L160 7 181 28 160 49Z',key==='FeatherBall'?'#2799b9':'#f2f0cd')+path('M150 28L160 17 170 28 160 39Z',top)+(key==='WingBall'?path('M275 14L294 14 310 45 291 45Z','#c77552'):'');
+ if(key==='JetBall')detail=[0,1].map(i=>`<g transform="${i?'translate(320 0) scale(-1 1)':''}">`+path('M9 111Q67 117 107 68Q124 42 102 23Q78 4 60 28Q49 47 66 56Q81 62 86 46Q89 37 80 35M0 80Q43 94 66 71M0 62Q31 79 48 65M16 28Q27 39 19 49M112 106Q137 76 151 78','#d8e9c5',5)+'</g>').join('');
+ if(metal){detail=path('M0 0L24 9V98L0 117Z M320 0L296 9V98L320 117Z','#626566');if(key==='LeadenBall')detail+=path('M58 113Q75 27 105 4M262 113Q245 27 215 4','#b39a47',12);if(key==='GigatonBall')detail+=[54,110,210,266].map(x=>path(`M${x-21} 99V44Q${x-21} 13 ${x} 13Q${x+21} 13 ${x+21} 44V99Z`,'#62676a',5)+circle(x,51,12,'#323639')+path(`M${x-9} 51h18M${x} 42v18`,'#777b7a',3)).join('');}
+ if(origin)detail=path('M0 0H320L260 44 202 19 160 66 104 20 46 43Z','#f65b42')+path('M0 0L46 43 15 109 93 83 160 116 202 19 260 44 320 0M104 20L93 83M260 44L303 110','#ff9b6e',3);
+ const wood=metal||origin?'':path('M0 172Q95 153 184 178T320 176M0 204Q90 180 173 205T320 208','#b5a071',2);
+ const seam=origin?'#aaa481':'#727777';
+ let latch=circle(160,118,26,'#30383a')+circle(160,118,23,'#898f8c')+circle(160,118,19,'#454d50')+circle(160,118,16,'#7d8585')+path('M148 101H172V137H148Z','#3c464a')+path('M152 103H168V138Q160 150 152 138Z','#858b88')+path('M157 107H163V128H157Z','#414c50')+path('M153 137H167','#303b40',2);
+ for(let i=0;i<12;i++){const a=i*Math.PI/6;latch+=circle(160+21*Math.cos(a),118+21*Math.sin(a),1,'#c4c7b7');}
+ return `<rect width="320" height="240" fill="${bottom}"/><rect width="320" height="118" fill="${top}"/>${detail}${wood}<path d="M0 112Q160 128 320 112" stroke="#313b3e" stroke-width="15" fill="none"/><path d="M0 111Q160 127 320 111" stroke="${seam}" stroke-width="7" fill="none"/><g transform="translate(160 118) scale(1.35) translate(-160 -118)">${latch}</g><rect x="145" y="0" width="30" height="8" rx="3" fill="#858b87" stroke="#3d4749"/><ellipse cx="160" cy="1" rx="9" ry="3" fill="#444d50"/>`;
+}
+
+function face(v){const [key,name,top,bottom,type,group]=v;if(group==='hisui')return hisuiFace(v);const band=type==='origin'?'#c7ad68':type==='premier'?'#d44845':group==='hisui'?'#594d38':'#263440';let wood=group==='hisui'&&!['metal','gigaton','origin'].includes(type)?[143,160,180,199].map(y=>path(`M0 ${y}Q85 ${y-9} 160 ${y}T320 ${y}`, '#9a7a4b',2)).join(''):'';return `<rect width="320" height="240" fill="${bottom}"/><path d="M0 0H320V122H0Z" fill="${top}"/>${referenceMotif(key)??motif(type)}${type==='dream'?path('M0 150Q65 200 113 151T221 151T320 150V176Q267 218 221 185T113 185T0 176Z','#d890b6'):''}${wood}<path d="M0 118H320" stroke="${band}" stroke-width="9"/>${circle(160,118,21,band)}${circle(160,118,14,key==='CherishBall'?'#e35136':key==='StrangeBall'?'#bfe5cd':'#f4f4e9')}${circle(160,118,7,group==='hisui'?'#725d3c':'#b2bcc4')}`;}
+for(const v of variants){const [key,name,top,bottom,type,group]=v,base=JSON.parse(JSON.stringify(CELIO_SKINS.PokeBall));base.name=name+(group==='hisui'?'（ヒスイ）':'');base.group=group||'normal';base.bodyColor=bottom;const art=face(v);base.preview=svg(320,240,'<defs><clipPath id="ball"><circle cx="160" cy="120" r="112"/></clipPath></defs><g clip-path="url(#ball)">'+art+'</g><circle cx="160" cy="120" r="112" fill="none" stroke="#263440" stroke-width="5"/>');let labels='';const box=(x,y,w,h,text)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#273a4b" stroke="#8294a1"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#f5f6ed">${text}</text>`;for(const [x,y,w,h,t] of [[8,3,92,28,'Q.SAVE'],[114,3,92,28,'TURBO'],[220,3,92,28,'Q.LOAD'],[6,47,100,36,'L'],[116,47,88,36,'MENU'],[214,47,100,36,'R']])labels+=box(x,y,w,h,t);base.artBody=svg(320,250,`<rect width="320" height="250" fill="${bottom}"/><g transform="translate(0 66)">${art}</g>${labels}`);base.artControls='skins/PokeBall-controls.svg';base.artActions='skins/PokeBall-actions.svg';let land=`<rect width="812" height="375" rx="18" fill="${bottom}"/><svg x="0" y="0" width="812" height="375" viewBox="0 0 320 240" preserveAspectRatio="none">${art}</svg>`;for(const item of base.landscape.items){const f=item.frame;if(Array.isArray(item.inputs)){const k=item.inputs.join('+');land+=box(f.x,f.y,f.width,f.height,({menu:'MENU',quickSave:'Q.SAVE',quickLoad:'Q.LOAD',toggleFastForward:'TURBO'})[k]||k.toUpperCase());}else{const x=f.x,y=f.y,w=f.width,h=f.height;land+=path(`M${x+w/3} ${y}h${w/3}v${h/3}h${w/3}v${h/3}h-${w/3}v${h/3}h-${w/3}v-${h/3}h-${w/3}v-${h/3}h${w/3}Z`,'#273a4b');}}base.artLandscape=svg(812,375,land);CELIO_SKINS[key]=base;}
 })();
