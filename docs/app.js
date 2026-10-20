@@ -33,8 +33,8 @@ function compatibleROM(bytes){
 
 const $=id=>document.getElementById(id),ctx=$('screen').getContext('2d',{alpha:false}),image=ctx.createImageData(240,160);
 const tell=s=>{$('status').textContent=s;$('startupstatus').textContent=s;};
-const defaults={rapidMode:'auto',rapidRate:8,audioMode:'recording',externalScale:100,skin:'PokeBall',direction:'dpad',quickSlot:0,rememberROM:true,keepAwake:true,volume:80,turbo:2,scale:100,layout:'standard',positions:{dpad:[0,30],ab:[100,30],l:[0,0],r:[100,0],select:[0,78],start:[100,78],home:[50,0],turbo:[50,100],rapid:[50,78],quickSave:[0,100],quickLoad:[100,100]}};
-let settings=JSON.parse(JSON.stringify(defaults));try{const s=JSON.parse(localStorage.getItem('celio-settings-v4')||'null');if(s){settings.rapidMode=s.rapidMode==='hold'?'hold':'auto';settings.rapidRate=[5,8,12].includes(s.rapidRate)?s.rapidRate:8;settings.audioMode=s.audioMode==='lowlatency'?'lowlatency':'recording';settings.externalScale=[100,90,80,70].includes(s.externalScale)?s.externalScale:100;settings.keepAwake=s.keepAwake!==false;settings.rememberROM=s.rememberROM!==false;settings.direction=s.direction==='stick'?'stick':'dpad';settings.quickSlot=Number.isInteger(s.quickSlot)&&s.quickSlot>=0&&s.quickSlot<4?s.quickSlot:0;settings.skin=(s.skin==='custom'||CELIO_SKINS[s.skin])?s.skin:'PokeBall';settings.volume=Math.min(100,Math.max(0,Number(s.volume)||0));settings.turbo=[2,3,4].includes(s.turbo)?s.turbo:2;settings.scale=Math.min(115,Math.max(75,Number(s.scale)||100));settings.layout=['standard','left','compact'].includes(s.layout)?s.layout:'standard';if(s.positions?.menu&&!s.positions.select&&!s.positions.start){const [x,y]=s.positions.menu;for(const key of ['l','r'])if(s.positions[key]?.[1]===100&&s.positions[key]?.[0]===(key==='l'?0:100))s.positions[key]=[key==='l'?0:100,0];settings.positions.select=[Math.max(0,Number(x)-50),Math.min(78,Number(y))];settings.positions.start=[Math.min(100,Number(x)+50),Math.min(78,Number(y))];}for(const k of Object.keys(defaults.positions))if(Array.isArray(s.positions?.[k]))settings.positions[k]=s.positions[k].map(v=>Math.min(100,Math.max(0,Number(v)||0)));}}catch{}
+const defaults={rapidMode:'auto',rapidRate:8,audioMode:'recording',externalScale:100,skin:'PokeBall',direction:'dpad',quickSlot:0,rememberROM:true,keepAwake:true,volume:80,turbo:2,scale:100,layout:'standard',positions:{dpad:[0,30],a:[100,25],b:[72,44],capture:[50,20],l:[0,0],r:[100,0],select:[0,78],start:[100,78],home:[50,0],turbo:[50,100],rapid:[50,78],quickSave:[0,100],quickLoad:[100,100]}};
+let settings=JSON.parse(JSON.stringify(defaults));try{const s=JSON.parse(localStorage.getItem('celio-settings-v4')||'null');if(s){settings.autoFit=s.autoFit!==false;settings.visibleButtons=s.visibleButtons&&typeof s.visibleButtons==='object'?s.visibleButtons:{};settings.gridSize=[8,16,24].includes(s.gridSize)?s.gridSize:16;if(s.positions?.ab&&!s.positions.a){s.positions.a=s.positions.ab;s.positions.b=[Math.max(0,s.positions.ab[0]-28),Math.min(100,s.positions.ab[1]+19)];}settings.rapidMode=s.rapidMode==='hold'?'hold':'auto';settings.rapidRate=[5,8,12].includes(s.rapidRate)?s.rapidRate:8;settings.audioMode=s.audioMode==='lowlatency'?'lowlatency':'recording';settings.externalScale=[100,90,80,70].includes(s.externalScale)?s.externalScale:100;settings.keepAwake=s.keepAwake!==false;settings.rememberROM=s.rememberROM!==false;settings.direction=s.direction==='stick'?'stick':'dpad';settings.quickSlot=Number.isInteger(s.quickSlot)&&s.quickSlot>=0&&s.quickSlot<4?s.quickSlot:0;settings.skin=(s.skin==='custom'||CELIO_SKINS[s.skin])?s.skin:'PokeBall';settings.volume=Math.min(100,Math.max(0,Number(s.volume)||0));settings.turbo=[2,3,4].includes(s.turbo)?s.turbo:2;settings.scale=Math.min(115,Math.max(75,Number(s.scale)||100));settings.layout=['standard','left','compact'].includes(s.layout)?s.layout:'standard';if(s.positions?.menu&&!s.positions.select&&!s.positions.start){const [x,y]=s.positions.menu;for(const key of ['l','r'])if(s.positions[key]?.[1]===100&&s.positions[key]?.[0]===(key==='l'?0:100))s.positions[key]=[key==='l'?0:100,0];settings.positions.select=[Math.max(0,Number(x)-50),Math.min(78,Number(y))];settings.positions.start=[Math.min(100,Number(x)+50),Math.min(78,Number(y))];}for(const k of Object.keys(defaults.positions))if(Array.isArray(s.positions?.[k]))settings.positions[k]=s.positions[k].map(v=>Math.min(100,Math.max(0,Number(v)||0)));}}catch{}
 function remember(){try{localStorage.setItem('celio-settings-v4',JSON.stringify(settings));}catch{tell('設定を保存できません。今回のプレイには反映します。');}}
 let M,db,loaded=false,paused=false,busy=false,keys=0,speed=1,romKey='',romName='',quickNamespace='',audio,gain,muted=false,nextSound=0,last=0,acc=0,link=null;
 let audioNeedsRebuild=false,audioRetryTimer,startupStarted=false,startupRequested=false,startupReady=false,externalPadConnected=false;
@@ -228,7 +228,7 @@ function bindDirection(b,stick=false){
  for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,e=>{if(pointer===e.pointerId)reset();});
  b.addEventListener('contextmenu',e=>e.preventDefault());
 }
-function externalDisplay(){return externalPadConnected&&!!window.matchMedia?.('(orientation: landscape)').matches;}
+function externalDisplay(){return !window.gsLayoutEditing&&externalPadConnected&&!!window.matchMedia?.('(orientation: landscape)').matches;}
 function updateExternalDisplay(){
  $('settingspanel').classList.toggle('controller-settings',externalPadConnected);
  const enabled=externalDisplay();$('player').classList.toggle('external-display',enabled);$('player').dataset.externalScale=String(settings.externalScale);
@@ -330,10 +330,10 @@ function requestQuickDelete(i){const key=romKey;showQuickConfirm('スロット '
 async function openQuick(mode){quickMode=mode;cancelQuick();$('quicktitle').textContent='保存枠の管理';openPanel('quickpanel');await renderSlots();}
 $('quicksaveopen').onclick=quickSaveSelected;$('quickloadopen').onclick=quickLoadSelected;$('quickmanage').onclick=()=>openQuick('manage');$('quickslot').onchange=e=>chooseQuickSlot(+e.target.value);
 function customPadScale(){const area=$('padarea');return Math.max(.1,Math.min(area.clientWidth/320,area.clientHeight/270))*settings.scale/100;}
-function applyPositions(){const area=$('padarea');if(!area.clientWidth||!area.clientHeight)return;const scale=settings.skin==='custom'?customPadScale():settings.scale/100;for(const group of document.querySelectorAll('.padgroup')){const [x,y]=settings.positions[group.dataset.group];const w=group.offsetWidth*scale,h=group.offsetHeight*scale;group.style.transform='scale('+scale+')';group.style.left=(Math.max(0,area.clientWidth-w)*x/100)+'px';group.style.top=(Math.max(0,area.clientHeight-h)*y/100)+'px';}renderLayoutPreview();}
+function applyPositions(){const area=$('padarea');if(!area.clientWidth||!area.clientHeight)return;const scale=settings.skin==='custom'?customPadScale():settings.scale/100;for(const group of document.querySelectorAll('.padgroup')){group.hidden=settings.skin==='custom'&&settings.visibleButtons?.[group.dataset.group]===false;const [x,y]=settings.positions[group.dataset.group];const w=group.offsetWidth*scale,h=group.offsetHeight*scale;group.style.transform='scale('+scale+')';group.style.left=(Math.max(0,area.clientWidth-w)*x/100)+'px';group.style.top=(Math.max(0,area.clientHeight-h)*y/100)+'px';}renderLayoutPreview();}
 function syncPositionInputs(){const p=settings.positions[$('positiongroup').value];$('positionx').value=p[0];$('positiony').value=p[1];renderLayoutPreview();}
 function syncSettings(){$('rapidmode').value=settings.rapidMode;$('rapidrate').value=settings.rapidRate;$('audiomode').value=settings.audioMode;$('externalscale').value=settings.externalScale;$('keepawake').checked=settings.keepAwake;$('rememberrom').checked=settings.rememberROM;$('directiontype').value=settings.direction;$('quickslot').value=settings.quickSlot;quickLabels();$('skinselect').value=settings.skin;window.refreshSkinGallery?.();$('volume').value=settings.volume;$('volumevalue').textContent=settings.volume+'%';$('speedsetting').value=settings.turbo;$('layout').value=settings.layout;$('buttonscale').value=settings.scale;$('scalevalue').textContent=settings.scale+'%';syncPositionInputs();applyPositions();updateGain();}
-function preset(name){settings.skin='custom';drawSkin();settings.layout=name;settings.positions=JSON.parse(JSON.stringify(defaults.positions));if(name==='left'){settings.positions.dpad=[100,23];settings.positions.ab=[0,30];}if(name==='compact'){settings.positions.dpad=[15,20];settings.positions.ab=[85,25];settings.scale=85;}syncSettings();remember();}
+function preset(name){settings.skin='custom';drawSkin();settings.layout=name;settings.positions=JSON.parse(JSON.stringify(defaults.positions));if(name==='left'){settings.positions.dpad=[100,23];settings.positions.a=[28,25];settings.positions.b=[0,44];}if(name==='compact'){settings.positions.dpad=[15,20];settings.positions.a=[90,25];settings.positions.b=[65,44];settings.scale=85;}syncSettings();remember();}
 $('netshortcut').onclick=()=>openPanel('netpanel');
 function closeTopSave(){ $('topsave-menu').hidden=true; $('topsave').focus({preventScroll:true}); }
 $('topsave').onclick=()=>{
@@ -526,7 +526,7 @@ function navigatePadSettings(pressed,triggered,now=Date.now()){
   padFocus.click();
  }
 }
-function pollGamepad(){
+function pollGamepad(){if(window.gsLayoutEditing)return;
  let pad;try{pad=Array.from(navigator.getGamepads?.()||[]).find(p=>p&&p.connected);}catch{}
  externalPadConnected=!!pad;updateExternalDisplay();
  held.delete('gamepad');
@@ -583,6 +583,7 @@ async function requestWakeLock(){
 $('keepawake').onchange=async e=>{settings.keepAwake=e.target.checked;remember();if(!settings.keepAwake){await wakeLock?.release();wakeLock=null;$('wakestatus').textContent='画面消灯の防止：オフ';}else requestWakeLock();};
 
 function addScreenshotHit(area){
+ if(settings.skin==='custom')return;
  const b=document.createElement('button');b.className='skin-hit';b.dataset.screenshot='true';b.setAttribute('aria-label','撮影メニュー・録画停止');Object.assign(b.style,{left:'44.6875%',top:'50.833333%',width:'10.625%',height:'14.166667%',borderRadius:'50%'});if(settings.skin!=='Cobalt'&&settings.skin!=='custom'&&!landscapeSkin())Object.assign(b.style,{top:(184/portraitSkinHeight*100)+'%',height:(34/portraitSkinHeight*100)+'%'});if(settings.skin==='Cobalt'&&!landscapeSkin()){const f=CELIO_SKINS.Cobalt.screenshot;Object.assign(b.style,{left:(f.x/1290*100)+'%',top:(f.y/1616*100)+'%',width:(f.width/1290*100)+'%',height:(f.height/1616*100)+'%'});}if(landscapeSkin())Object.assign(b.style,{left:'47.5%',top:'89%',width:'5%',height:'10.83%',background:'radial-gradient(circle,#fff 0 22%,#26364b 24% 36%,transparent 38%),linear-gradient(#d64149 43%,#26364b 44% 56%,#fff 57%)',border:'2px solid #26364b'});if(settings.skin==='custom'){const size=34*customPadScale();Object.assign(b.style,{width:size+'px',height:size+'px',left:((area.clientWidth-size)/2)+'px',top:((area.clientHeight-size)/2)+'px'});}b.onclick=()=>requestCapture();area.append(b);
 }
 function requestCapture(fromPad=false){
@@ -699,20 +700,12 @@ $('startgame').onclick=()=>{
 function openGeneralSection(name){for(const key of Object.keys(sectionOwners)){if(sectionOwners[key]!==sectionOwners[name])continue;$('page-'+key).hidden=key!==name;$('open-'+key).setAttribute('aria-expanded',String(key===name));}if(name==='controls')renderLayoutPreview();}
 for(const key of Object.keys(sectionOwners))$('open-'+key).onclick=()=>{const open=$('page-'+key).hidden;if(open)openGeneralSection(key);else{$('page-'+key).hidden=true;$('open-'+key).setAttribute('aria-expanded','false');}};
 $('toprom').onclick=()=>{selectSettingsTab('rom');openPanel('settingspanel');};
-function renderLayoutPreview(){const area=$('layoutpreview'),pad=$('padarea');
- if(area.closest('[hidden]')||!area.clientWidth||!pad.clientWidth||!pad.clientHeight)return;
- const pw=pad.clientWidth||320,ph=pad.clientHeight||270;
- area.style.height=Math.max(280,Math.min(460,(area.clientWidth||320)*ph/pw))+'px';
- const fit=Math.min((area.clientWidth||320)/pw,(area.clientHeight||280)/ph),scale=customPadScale()*fit;
- const sizes={dpad:[117,117],ab:[116,82],l:[42,38],r:[42,38],select:[78,32],start:[78,32],home:[78,32],turbo:[78,32],rapid:[78,32],quickSave:[78,32],quickLoad:[78,32]};
- for(const key of Object.keys(defaults.positions)){const b=$('preview-'+key),[x,y]=settings.positions[key],[w,h]=sizes[key];b.style.width=w*scale+'px';b.style.height=h*scale+'px';b.style.left=Math.max(0,area.clientWidth-w*scale)*x/100+'px';b.style.top=Math.max(0,area.clientHeight-h*scale)*y/100+'px';b.classList.toggle('selected',key===$('positiongroup').value);}}
-
-for(const key of Object.keys(defaults.positions)){const b=$('preview-'+key);let drag=null;b.addEventListener('pointerdown',e=>{e.preventDefault();$('positiongroup').value=key;syncPositionInputs();const r=b.getBoundingClientRect();drag={id:e.pointerId,x:e.clientX-r.left,y:e.clientY-r.top};b.setPointerCapture(e.pointerId);renderLayoutPreview();});b.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;e.preventDefault();const a=$('layoutpreview'),r=a.getBoundingClientRect();settings.positions[key]=[Math.min(100,Math.max(0,(e.clientX-r.left-drag.x)/Math.max(1,a.clientWidth-b.offsetWidth)*100)),Math.min(100,Math.max(0,(e.clientY-r.top-drag.y)/Math.max(1,a.clientHeight-b.offsetHeight)*100))];settings.skin='custom';$('skinselect').value='custom';drawSkin();applyPositions();syncPositionInputs();renderLayoutPreview();remember();});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>{drag=null;});}
+function renderLayoutPreview(){}
 
 $('custom-home').onclick=()=>{$('settingsopen').onclick();};$('custom-turbo').onclick=()=>{if(loaded)toggleTurbo();};$('custom-rapid').onclick=toggleRapid;$('custom-quickSave').onclick=quickSaveSelected;$('custom-quickLoad').onclick=quickLoadSelected;
 
 // Recompute only after layout has a measurable surface; never change saved coordinates.
-if(typeof ResizeObserver!=='undefined'){const layoutObserver=new ResizeObserver(()=>{applyPositions();renderLayoutPreview();});layoutObserver.observe($('layoutpreview'));layoutObserver.observe($('padarea'));}
+if(typeof ResizeObserver!=='undefined'){const layoutObserver=new ResizeObserver(()=>{applyPositions();renderLayoutPreview();});layoutObserver.observe($('padarea'));}
 
 syncTurboIndicator();
 

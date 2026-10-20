@@ -4,8 +4,8 @@
  const parts=[
  ['ROM','右上のROMボタンから、ROMの読込・端末への記憶設定を開きます。','#toprom'],
  ['方向','十字キー・スティックで移動や項目選択。指を離すと入力を止めます。','.skin-hit[aria-label="十字キー"],.skin-hit[aria-label="スティック"],.padgroup[data-group="dpad"]'],
- ['A','ゲームのAボタン。多くのゲームでは決定・調べる操作です。','.skin-hit[data-key="0"],.ab [data-key="0"]'],
- ['B','ゲームのBボタン。多くのゲームではキャンセル・戻る操作です。','.skin-hit[data-key="1"],.ab [data-key="1"]'],
+ ['A','ゲームのAボタン。多くのゲームでは決定・調べる操作です。','.skin-hit[data-key="0"],#custom-a'],
+ ['B','ゲームのBボタン。多くのゲームではキャンセル・戻る操作です。','.skin-hit[data-key="1"],#custom-b'],
  ['L / R','ゲームのL・Rボタン。機能はゲームによって異なります。','.skin-hit[data-key="9"],.skin-hit[data-key="8"],.padgroup[data-group="l"],.padgroup[data-group="r"]'],
  ['START / SELECT','ゲームのスタート・セレクトボタン。メニューなど、役割はゲームによって異なります。','.skin-hit[data-key="3"],.skin-hit[data-key="2"],#custom-start,#custom-select'],
  ['設定 / MENU','音量、倍速、ボタン配置、ROM、セーブなどを設定します。','.skin-hit[aria-label="設定"],#custom-home'],
