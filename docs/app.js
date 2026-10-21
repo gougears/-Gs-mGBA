@@ -45,8 +45,15 @@ const held=new Map(),sounds=new Set(),directionResets=new Set();let toastTimer;
 function gameNotice(message){tell(message);$('quickstatus').textContent=message;$('gametoast').textContent=message;$('gametoast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('gametoast').hidden=true;},2400);}
 const players=[{M:null,loaded:false,romKey:'',romName:'',quickNamespace:''},{M:null,loaded:false,romKey:'',romName:'',quickNamespace:''}];let activePlayer=0;
 function capturePlayer(){Object.assign(players[activePlayer],{M,loaded,romKey,romName,quickNamespace});}
+let onlineHeader = null;
+function updateROMHeader(){
+ const label=$('romversion');
+ const state=linkMode==='online'?onlineHeader:null;
+ const text=state?(state.phase==='connecting'?'オンライン接続中…':(state.phase==='waiting'?'相手待ち':'通信中')+' · 部屋 '+state.room):(romName||'ROM未読込');
+ label.textContent=text;label.title=state?text:(romName||'');
+}
 function playerUI(){
- $('playerlabel').textContent='P'+(activePlayer+1);$('playerlabel').disabled=linkMode!=='local'||!players[1-activePlayer].loaded;$('playerlabel').setAttribute('aria-label','プレイヤー'+(activePlayer+1)+'：タップで切替');$('romversion').textContent=romName||'ROM未読込';$('romversion').title=romName||'';
+ $('playerlabel').textContent='P'+(activePlayer+1);$('playerlabel').disabled=linkMode!=='local'||!players[1-activePlayer].loaded;$('playerlabel').setAttribute('aria-label','プレイヤー'+(activePlayer+1)+'：タップで切替');updateROMHeader();
  $('closeplayer2').disabled=!players[1].M;$('switchplayer').hidden=!players[1].M;$('switchplayer').textContent='プレイヤー'+(2-activePlayer)+'へ切替';
  for(let i=0;i<2;i++)$('p'+(i+1)+'info').textContent=(i+1)+'：'+(players[i].romName||'未読込');
  for(const id of ['export','import','topsave','topimport','topexport','topreset'])$(id).disabled=!loaded||!!link?.active&&['import','topimport','topreset'].includes(id);
@@ -373,7 +380,7 @@ try{if(navigator.mediaSession){
  document.addEventListener('visibilitychange',()=>{if(document.hidden)backgroundAudio();else foregroundAudio();});
  addEventListener('pagehide',()=>{backgroundAudio();link?.disconnect();persistBoth();clearKeys();});
  addEventListener('pageshow',e=>{if(e.persisted){audioNeedsRebuild=true;flushAudio();foregroundAudio();}});setInterval(()=>{if(!busy)persistBoth();},3000);
-const linkHooks={status:s=>$('netstatus').textContent=s,active:on=>{$('netstop').disabled=!on;$('netcreate').disabled=on;$('onlinecreate').disabled=on;$('onlinejoin').disabled=on;if(on)setSpeed(1);playerUI();if(!$('quickpanel').hidden)renderSlots();}};
+const linkHooks={session:state=>{onlineHeader=state;updateROMHeader();},status:s=>$('netstatus').textContent=s,active:on=>{$('netstop').disabled=!on;$('netcreate').disabled=on;$('onlinecreate').disabled=on;$('onlinejoin').disabled=on;if(on)setSpeed(1);playerUI();if(!$('quickpanel').hidden)renderSlots();}};
 $('linkmode').onchange=e=>{link?.disconnect();linkMode=e.target.value;link=linkMode==='local'?localLink:(M?createCelioLink(M,linkHooks):null);$('localoptions').hidden=linkMode!=='local';$('onlineoptions').hidden=linkMode!=='online';};
 function onlineStart(room){if(!loaded||busy||linkMode!=='online')return gameNotice('先にROMを読み込んでください。');closeSavePanel();cancelQuick();pause(false);link.start(room);}
 $('onlinecreate').onclick=()=>onlineStart('');$('onlinejoin').onclick=()=>onlineStart($('room').value.trim());

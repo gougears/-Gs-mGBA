@@ -21,6 +21,8 @@ function createCelioLink(M,hooks){
  let ws=null,active=false,inSession=false,joined=false,deviceStarted=false,batched=false;
  let sequence=0,expected=0,nextAck=1,timer=null,startTimer=null,lastReceive=0,pingLimit=30000,lastTick=0,resumeUntil=0,lastPing=0,lastPong=0,log=null,gameClosed=false;
  let queued=0,scheduled=false;
+ let roomCode='';
+ const displaySession=phase=>hooks.session?.(phase?{phase,room:roomCode}:null);
  const buffered=new Map(),seen=new Set(),inFlight=new Map(),outgoing=[];
  const note=(kind,detail)=>celioDiagnostics.event(log,kind,detail);
  const report=s=>hooks.status(s);
@@ -32,7 +34,7 @@ function createCelioLink(M,hooks){
   if(ws){const old=ws;ws=null;old.onclose=old.onmessage=old.onerror=null;try{if(old.readyState===1)old.send('42["sessionLeft"]');old.close();}catch{}}
   if(active)M._link_disable();active=inSession=deviceStarted=false;buffered.clear();seen.clear();
   note('end',{reason:message,error});celioDiagnostics.finish(log,message,error);
-  hooks.active(false);report(message+(error?(celioDiagnostics.storageOK?' 通信ログを記録しました。':' 通信ログはメモリ内にあります。閉じる前に保存してください。'):''));
+  roomCode='';displaySession(null);hooks.active(false);report(message+(error?(celioDiagnostics.storageOK?' 通信ログを記録しました。':' 通信ログはメモリ内にあります。閉じる前に保存してください。'):''));
  }
  function fail(message){disconnect(message,true);}
  function startDevice(){
@@ -83,7 +85,7 @@ function createCelioLink(M,hooks){
    if(!seen.has(payload.uuid)){if(seen.size>=4096)throw Error('通信コマンドが多すぎます');seen.add(payload.uuid);note('command',{command:payload.command});M._link_command(payload.command);}
    acknowledge(id);
   }else if(name==='partnerJoined'){
-   startDevice();acknowledge(id);report('相手が参加しました。両者ともゲーム内の通信受付へ進んでください。');
+   startDevice();acknowledge(id);displaySession('connected');report('相手が参加しました。両者ともゲーム内の通信受付へ進んでください。');
   }else if(name==='partnerLeft'){
    acknowledge(id);fail('相手が退出しました。部屋を作り直してください。');
   }else if(name==='sessionClose'){
@@ -106,7 +108,7 @@ function createCelioLink(M,hooks){
    const result=data[0];if(!result||result.variant!=='Ok')throw Error(result?.error==='Session is full'?'部屋が満員です':result?.error==='Session not found'?'部屋が見つかりません':'部屋への接続に失敗しました');
    const session=result.value||result.data||result,code=session.id;
    if(!/^\d{4}$/.test(String(code)))throw Error('部屋番号を取得できません');
-   inSession=true;note('room_joined');report('部屋番号：'+String(code)+'\n'+(room?'参加しました。ゲーム内の通信受付へ進んでください。':'相手に番号を伝えてください。'));if(room)startDevice();
+   inSession=true;roomCode=String(code);displaySession(room?'connected':'waiting');note('room_joined');report('部屋番号：'+String(code)+'\n'+(room?'参加しました。ゲーム内の通信受付へ進んでください。':'相手に番号を伝えてください。'));if(room)startDevice();
   }else if(type==='3'&&inFlight.has(id)){
    if(data.length!==1||data[0]!==true)throw Error('通信データが中継サーバーに拒否されました');
    const req=inFlight.get(id);clearTimeout(req.timer);inFlight.delete(id);queued-=req.count;schedule();
@@ -117,7 +119,7 @@ function createCelioLink(M,hooks){
   try{for(let i=0;i<256;i++){
    const p=M._link_event();if(!p)break;const v=M.HEAPU16.subarray(p/2,p/2+34);
    if(v[0]===3)throw Error('通信処理が追いつきません。部屋に入り直してください。');
-   if(v[0]===1){note('device_status',{status:v[1]});if(v[1]===0xff07)gameClosed=true;emit('deviceStatus',{uuid:crypto.randomUUID(),linkStatus:v[1]});if(v[1]===0xff05)report('通信中 · ゲーム内で対戦・交換を操作してください。');}
+   if(v[0]===1){note('device_status',{status:v[1]});if(v[1]===0xff07)gameClosed=true;emit('deviceStatus',{uuid:crypto.randomUUID(),linkStatus:v[1]});if(v[1]===0xff05){displaySession('connected');report('通信中 · ゲーム内で対戦・交換を操作してください。');}}
    else if(v[0]===2){if(v[1]!==32)throw Error('通信データの長さが不正です');emit('deviceData',{sequence:sequence++,data:Array.from(v.subarray(2,34))});if(log)log.sent++;}
   }}catch(e){fail(e.message);}
  }
@@ -134,7 +136,7 @@ function createCelioLink(M,hooks){
   if(room&&!/^\d{4}$/.test(room)){report('部屋番号は4桁の数字です。');return false;}
   disconnect('接続準備中…');log=celioDiagnostics.begin(room?'guest':'host');note('protocol',{mode:'legacy'});
   if(!M._link_enable()){fail('先にROMを開いてください。');return false;}
-  active=true;joined=inSession=deviceStarted=batched=gameClosed=false;sequence=expected=0;nextAck=1;pingLimit=30000;lastReceive=lastTick=Date.now();resumeUntil=lastPing=lastPong=0;hooks.active(true);report('Celio中継サーバーに接続中…');
+  active=true;joined=inSession=deviceStarted=batched=gameClosed=false;sequence=expected=0;nextAck=1;pingLimit=30000;lastReceive=lastTick=Date.now();resumeUntil=lastPing=lastPong=0;hooks.active(true);displaySession('connecting');report('Celio中継サーバーに接続中…');
   try{const socket=ws=new WebSocket(endpoint);
    socket.onmessage=e=>{if(ws!==socket)return;try{packet(e.data,room);}catch(err){fail(err instanceof SyntaxError?'通信メッセージを解析できません':err.message);}};
    socket.onerror=()=>{if(ws===socket)fail('中継サーバーに接続できません。回線・サーバーの状態をご確認ください。');};
