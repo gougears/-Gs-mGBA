@@ -55,7 +55,7 @@ ROMはプレイヤーごとに最後の1本を記憶します。保存済みROM�
 | --- | --- |
 | [mGBA](https://github.com/mgba-emu/mgba) | GBAエミュレーターコア |
 | [Exormeter/mGBA_celio_edition](https://github.com/Exormeter/mGBA_celio_edition) | Celio対応コアのベース。元ソース記載の基準コミット：`3da13060a586f2da8eb4ecbb167f642e2e4889c2` |
-| mGBA-celio-2.0.0-rom64-netlink6 の提供パッチ | ROM64・拡張セーブ・通信対応の元パッチ。ソースアーカイブに収録 |
+| [ももアイス氏の rom64-netlink-8](https://github.com/pm-start/mGBA_celio_edition/tree/b6633141108285fc825106ffc28f7fae7c323305) | 現行コア。ROM64・拡張セーブ対応。ブラウザの通信処理は従来のまま |
 | [mgba-celio-web](https://liru55.github.io/mgba-celio-web/) | ブラウザ版作成時の参考元 |
 | [Emscripten](https://emscripten.org/) / WebAssembly | C/C++コアのブラウザ向けビルド。ビルドスクリプトの想定はEmscripten 3.1.74 |
 | Celio中継サーバー | オンライン通信で `wss://celio-server.up.railway.app` を使用 |
@@ -67,12 +67,12 @@ ROM・セーブファイル自体を中継サーバーへアップロードす�
 
 - ブラウザ側の実行ファイル：[`docs/`](docs/)
 - コア・ビルド資料のベースとなる旧スナップショット：[`docs/source.zip`](docs/source.zip)（最新ブラウザUIは含みません）
-- 現行コアへの追加ソースと再ビルド手順：[`tools/core/`](tools/core/)（上記スナップショットに重ねて使用）
+- 現行コアへの追加ソースと再ビルド手順：[`tools/core/`](tools/core/)（netlink8ソースに適用）
 - mGBAコアのライセンス：Mozilla Public License 2.0。本文は [`LICENSE`](LICENSE)。同梱の第三者コードには各ファイルのライセンスが適用されます。
 - スキンなどの画像を一律にMPL-2.0で再許諾するものではありません。
 - 開発履歴：[`CHANGELOG.md`](CHANGELOG.md)（過去版の仕様や検証記録も含みます）
 
-コアを再ビルドする場合は、[`tools/core/README.md`](tools/core/README.md)の手順に従ってください。`source.zip`単体のビルドでは現在のチート追加部分が含まれません。ブラウザ側の変更は `docs/`、コアの追加変更は `tools/core/` を参照してください。
+コアを再ビルドする場合は、[`tools/core/README.md`](tools/core/README.md)の手順に従ってください。`source.zip`は旧コアです。現行コアは手順内で指定したnetlink8ソースと追加ファイルでビルドします。ブラウザ側の変更は `docs/`、コアの追加変更は `tools/core/` を参照してください。
 
 ## 公開・更新方法（開発者向け）
 
@@ -125,7 +125,7 @@ PDF.jsの配布モジュールはgzip分割で同梱し、ブラウザー内で�
 画面は表示領域・縦横・安全領域に合わせて調整し、標準表示にも戻せます。
 チートはゲーム・プレイヤー別に端末内保存し、各コードをON/OFFできます。PAR v3、GameShark / AR v1・v2、CodeBreaker、VBA直接指定をmGBAの標準処理で読み込みます。マスターコードや複数行コードは同じ登録欄へまとめてください。ゲームの版によって利用できるコードは異なります。通信中はチート適用を停止します。
 メモリビューアーは操作中プレイヤーの256バイトを8/16/32bitで読み取り表示します。
-最新コアの追加ソース・再ビルド手順は [`tools/core/`](tools/core/) にあります（`source.zip` に重ねて使用）。
+最新コアの追加ソース・再ビルド手順は [`tools/core/`](tools/core/) にあります（指定のnetlink8ソースに適用）。
 
 設定タブは「画面・音量／ROM／セーブ／通信／端末／チート／外部パッド／情報」の順です。上部右端のROMボタンから読込・記憶設定を開けます。ROMタブ内の再起動・一時停止ボタンは削除し、上部の再起動ボタンは残しています。ブラウザの上下バーで表示領域が狭くなった場合も、ボールスキンの十字キー・A/BとSELECT/STARTが重ならないよう配置します。
 

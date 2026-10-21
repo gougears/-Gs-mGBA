@@ -1,14 +1,18 @@
-# Browser cheat bridge
+# Browser core: rom64-netlink8
 
-The baseline core rebuilt from `docs/source.zip` with Emscripten 3.1.74 is byte-for-byte identical to the previously published `docs/celio-web.js` (SHA-256 `6f344e0c9e9fee630690c387e878807fa6afe579d03f1ff8e6e829502b7220df`).
+Current upstream: [pm-start/mGBA_celio_edition](https://github.com/pm-start/mGBA_celio_edition/tree/b6633141108285fc825106ffc28f7fae7c323305), tag `rom64-netlink-8`, commit `b6633141108285fc825106ffc28f7fae7c323305` (ももアイス氏). The uploaded source archive was used for this build.
 
-To rebuild the current core:
+## Rebuild
 
-1. Extract `docs/source.zip` into a separate build directory.
-2. Copy this directory's `browser.c` and `browser-cheats.inc` into the extracted `core/` directory, replacing `browser.c`.
-3. Activate Emscripten 3.1.74 and run the extracted `build-browser.sh` in that directory.
-4. Copy `build/celio-web.js` into `docs/`, then run `python tools/build-offline.py docs` from the repository root.
+1. Download and extract the source at the pinned upstream commit above (or the matching `mGBA_celio_edition-rom64-netlink-8.zip`).
+2. Install/activate Emscripten **3.1.74**, CMake and Python 3.
+3. From this repository run `bash tools/core/build-browser.sh /path/to/extracted-source /path/to/build`.
+4. Copy the resulting `celio-web.js` to `docs/celio-web.js`, then run `python3 tools/build-offline.py docs`.
 
-The bridge exposes mGBA's native encrypted PAR v3, GameShark/AR v1-v2, CodeBreaker, autodetection and VBA direct codes. A whole group is validated before installation; malformed/incomplete groups are rejected. The native engine handles conditions, multi-line codes, encryption, master hooks and ROM patches. No ROMs or cheat codes are sent to a server.
+The script adds the browser target and disables pthread selection for Emscripten. `browser.c` and `browser-cheats.inc` retain the existing browser API, extended saves, quick states and native cheat engine. `browser-link.cpp` is the unchanged browser communication bridge from the previous source snapshot. The web communication protocol (`docs/link.js`, `docs/local-link.js`) is unchanged; this release does not add PC interoperability improvements.
 
-The underlying core and Celio communication implementation are unchanged. These source files are provided under MPL-2.0; see the repository LICENSE and upstream source headers. `docs/source.zip` remains the baseline source snapshot; these files are its current build overrides.
+Native cheats include encrypted PAR v3, GameShark/AR v1-v2, CodeBreaker, autodetection and VBA direct codes. A whole group is validated before installation. No ROMs or cheat codes are sent to a server.
+
+The upstream experimental SuperCard path requires `MGBA_SCEMU=1`; it is not enabled in this browser build.
+
+These source files are provided under MPL-2.0; see the repository LICENSE and upstream source headers. `docs/source.zip` remains an older baseline snapshot, not the current netlink8 source. Use the pinned upstream plus this directory for the current core, and `docs/` for the current browser interface.

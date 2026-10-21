@@ -1,0 +1,7 @@
+if(EMSCRIPTEN)
+ add_executable(celio-web browser.c browser-link.cpp)
+ target_compile_definitions(celio-web PRIVATE ${OS_DEFINES} ${FEATURE_DEFINES} ${FUNCTION_DEFINES})
+ target_link_libraries(celio-web mgba)
+ set_target_properties(celio-web PROPERTIES SUFFIX ".js")
+ target_link_options(celio-web PRIVATE "-sMODULARIZE=1" "-sEXPORT_NAME=createCelio" "-sALLOW_MEMORY_GROWTH=1" "-sINITIAL_MEMORY=134217728" "-sMAXIMUM_MEMORY=536870912" "-sSTACK_SIZE=2097152" "-sEXPORTED_FUNCTIONS=['_malloc','_free']" "-sENVIRONMENT=web,node" "-sFILESYSTEM=0" "-sSINGLE_FILE=1")
+endif()
