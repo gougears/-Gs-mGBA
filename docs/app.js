@@ -112,7 +112,7 @@ function scheduleAudioTime(now,duration){
  const start=nextSound>now+.002?nextSound:now+lead;nextSound=start+duration;return start;
 }
 function consumeAudio(){const n=M._audio_read();if(!audio||audio.state!=='running'||paused||muted||settings.volume===0||!n)return;const scheduled=scheduleAudioTime(audio.currentTime,n/M._audio_rate()/speed);if(scheduled===null)return;const a=M.HEAP16.subarray(M._audio_ptr()/2,M._audio_ptr()/2+n*2),b=audio.createBuffer(2,n,M._audio_rate());for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++)d[i]=a[2*i+ch]/32768;}const s=audio.createBufferSource();s.buffer=b;s.playbackRate.value=speed;s.connect(gain);sounds.add(s);s.onended=()=>{sounds.delete(s);s.disconnect();};s.start(scheduled);}
-function clearKeys(){stopRapid();for(const reset of directionResets)reset();held.clear();keys=0;document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));}
+function clearKeys(){window.gsMacro?.cancel();stopRapid();for(const reset of directionResets)reset();held.clear();keys=0;document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));}
 function pause(value){paused=value||!startupStarted;$('pauseoverlay').hidden=!paused||!loaded;last=0;acc=0;clearKeys();$('onlinepausenote').hidden=!(paused&&linkMode==='online'&&link?.active);flushAudio();if(paused){if(link?.active&&linkMode!=='online')link.disconnect('一時停止したため通信を終了しました。');persistBoth();}else audioStart();}
 function updateTurboButton(button){
  if(!button)return;
@@ -123,7 +123,7 @@ function updateTurboButton(button){
 }
 function syncTurboIndicator(){for(const button of document.querySelectorAll('.turbo-state'))updateTurboButton(button);updateTurboButton($('custom-turbo'));}
 function setSpeed(n){speed=n;last=0;acc=0;flushAudio();$('speedstatus').textContent='現在の速度：'+speed+'倍';updateGain();syncTurboIndicator();}
-function loop(t){requestAnimationFrame(loop);pollGamepad();const onlineHold=paused&&linkMode==='online'&&link?.active;if(!startupStarted||!loaded||(paused&&!onlineHold)||busy){last=t;return;}if(!last)last=t;acc+=Math.min(100,t-last);last=t;const dt=1000/59.7275;let count=0;try{while(acc>=dt&&count<6){for(let i=0;i<speed;i++){window.gsCheatsSync?.();M._frame(onlineHold?0:rapidFrameKeys());consumeAudio();if(link?.active){link.pump();if(linkMode==='local'&&link.active){const peer=players[1-activePlayer].M;peer._frame(0);peer._audio_read();link.pump();}}}acc-=dt;count++;}if(count&&!onlineHold)paint();}catch(e){pause(true);tell('実行エラー：'+e.message);}}
+function loop(t){requestAnimationFrame(loop);pollGamepad();const onlineHold=paused&&linkMode==='online'&&link?.active;if(!startupStarted||!loaded||(paused&&!onlineHold)||busy){last=t;return;}if(!last)last=t;acc+=Math.min(100,t-last);last=t;const dt=1000/59.7275;let count=0;try{while(acc>=dt&&count<6){for(let i=0;i<speed;i++){window.gsCheatsSync?.();M._frame(onlineHold?0:(window.gsMacro?.frame(rapidFrameKeys())??rapidFrameKeys()));consumeAudio();if(link?.active){link.pump();if(linkMode==='local'&&link.active){const peer=players[1-activePlayer].M;peer._frame(0);peer._audio_read();link.pump();}}}acc-=dt;count++;}if(count&&!onlineHold)paint();}catch(e){pause(true);tell('実行エラー：'+e.message);}}
 function openPanel(id){if(id==='quickpanel'||id==='savepanel')selectSettingsTab('saves');if(id==='netpanel')selectSettingsTab('network');clearKeys();$('settingspanel').hidden=false;$(id).hidden=false;renderLayoutPreview();$(id).scrollIntoView({behavior:'smooth',block:'nearest'});if(externalPadConnected&&id==='settingspanel'){padNavZone='tabs';focusPadSetting($('tab-'+activeSettingsTab));}}
 function closeSettings(){cancelGameRestart();closePadChoices(false);clearPadFocus();$('settingspanel').hidden=true;clearKeys();applyPositions();if(loaded&&!paused)audioStart();}
 for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>{if(b.dataset.close==='settingspanel')closeSettings();else $(b.dataset.close).hidden=true;};
@@ -380,7 +380,7 @@ try{if(navigator.mediaSession){
  document.addEventListener('visibilitychange',()=>{if(document.hidden)backgroundAudio();else foregroundAudio();});
  addEventListener('pagehide',()=>{backgroundAudio();link?.disconnect();persistBoth();clearKeys();});
  addEventListener('pageshow',e=>{if(e.persisted){audioNeedsRebuild=true;flushAudio();foregroundAudio();}});setInterval(()=>{if(!busy)persistBoth();},3000);
-const linkHooks={session:state=>{onlineHeader=state;updateROMHeader();},status:s=>$('netstatus').textContent=s,active:on=>{$('netstop').disabled=!on;$('netcreate').disabled=on;$('onlinecreate').disabled=on;$('onlinejoin').disabled=on;if(on)setSpeed(1);playerUI();if(!$('quickpanel').hidden)renderSlots();}};
+const linkHooks={session:state=>{onlineHeader=state;updateROMHeader();},status:s=>$('netstatus').textContent=s,active:on=>{if(on)window.gsMacro?.cancel();$('netstop').disabled=!on;$('netcreate').disabled=on;$('onlinecreate').disabled=on;$('onlinejoin').disabled=on;if(on)setSpeed(1);playerUI();if(!$('quickpanel').hidden)renderSlots();}};
 $('linkmode').onchange=e=>{link?.disconnect();linkMode=e.target.value;link=linkMode==='local'?localLink:(M?createCelioLink(M,linkHooks):null);$('localoptions').hidden=linkMode!=='local';$('onlineoptions').hidden=linkMode!=='online';};
 function onlineStart(room){if(!loaded||busy||linkMode!=='online')return gameNotice('先にROMを読み込んでください。');closeSavePanel();cancelQuick();pause(false);link.start(room);}
 $('onlinecreate').onclick=()=>onlineStart('');$('onlinejoin').onclick=()=>onlineStart($('room').value.trim());
@@ -444,8 +444,8 @@ async function renderBackups(){
 }
 $('showbackups').onclick=renderBackups;
 // Per-controller mappings; notifications also work when browsers expose pads only after input.
-const gamepadDefaults={buttons:{a:0,b:1,l:4,r:5,select:8,start:9,up:12,down:13,left:14,right:15,quickSave:-1,quickLoad:-1,home:-1,turbo:-1,screenshot:-1},axisX:0,axisY:1,deadzone:.25,invertX:false,invertY:false};
-const gamepadActions={a:['A',0],b:['B',1],l:['L',9],r:['R',8],select:['SELECT',2],start:['START',3],up:['上',6],down:['下',7],left:['左',5],right:['右',4],quickSave:['クイックセーブ',null],quickLoad:['クイックロード',null],home:['ホーム（設定）',null],turbo:['倍速',null],screenshot:['スクリーンショット',null]};
+const gamepadDefaults={buttons:{a:0,b:1,l:4,r:5,select:8,start:9,up:12,down:13,left:14,right:15,quickSave:-1,quickLoad:-1,home:-1,turbo:-1,macro:-1,screenshot:-1},axisX:0,axisY:1,deadzone:.25,invertX:false,invertY:false};
+const gamepadActions={a:['A',0],b:['B',1],l:['L',9],r:['R',8],select:['SELECT',2],start:['START',3],up:['上',6],down:['下',7],left:['左',5],right:['右',4],quickSave:['クイックセーブ',null],quickLoad:['クイックロード',null],home:['ホーム（設定）',null],turbo:['倍速',null],macro:['マクロ再生・停止',null],screenshot:['スクリーンショット',null]};
 let gamepadProfiles={};try{gamepadProfiles=JSON.parse(localStorage.getItem('celio-gamepad-v1')||'{}')||{};}catch{}
 let gamepadWasPressed=false,activePadId='',gamepadCapture=null,capturePrevious=[],padPrevious=[];
 function padProfile(){
@@ -563,6 +563,7 @@ function pollGamepad(){if(window.gsLayoutEditing)return;
    if(triggered('quickSave'))quickSaveSelected();
    else if(triggered('quickLoad'))quickLoadSelected();
    else if(triggered('turbo'))toggleTurbo();
+   else if(triggered('macro'))window.gsMacro?.toggle();
    else if(triggered('screenshot'))requestCapture(true);
   }
  }
