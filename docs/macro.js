@@ -39,7 +39,8 @@ if(typeof window!=='undefined')(()=>{
  <div class="action-grid"><button id="macro-save" type="button">編集内容を保存</button><button id="macro-delete" type="button">この枠を削除</button></div>
  <label class="switchfield"><input id="macro-show" type="checkbox">プレイ画面にマクロボタンを表示</label><p id="macro-status" role="status"></p><p>記録を始めると設定が閉じます。停止ボタンか設定を開く操作で記録を保存します。再生中はマクロの操作を優先します。倍速中はマクロも速くなります。通信中は使用できません。</p>`;
  $('page-rapid').append(root);
- const bar=document.createElement('div');bar.id='macro-bar';bar.hidden=true;bar.innerHTML='<button id="macro-toggle" type="button">マクロ再生</button><button id="macro-emergency" type="button">停止</button>';document.body.append(bar);
+ const bar=document.createElement('div');bar.id='macro-bar';bar.hidden=true;bar.innerHTML='<button id="macro-toggle" type="button">マクロ再生</button><button id="macro-emergency" type="button">停止</button>';document.querySelector('.playbar').after(bar);
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{if(CELIO_SKINS[settings.skin]?.delta)fitDeltaSkin();}).observe(bar);
  const context=()=>loaded?romKey+':player'+activePlayer:'';
  const entry=()=>data[scope]||{slots:[],selected:0};
  const status=text=>{$('macro-status').textContent=text;};

@@ -41,7 +41,7 @@ self.addEventListener('install', event => event.waitUntil(populate().catch(async
   for (const client of clients) client.postMessage({type:'OFFLINE_ERROR',message:error.message});
   throw error;
 })));
-// No skipWaiting: running games keep their existing complete version until all tabs close.
+// Activate on an idle single-tab launch only; running games keep their version.
 self.addEventListener('activate', event => event.waitUntil((async () => {
   for (const key of await caches.keys()) if (key.startsWith(PREFIX) && key !== CACHE) await caches.delete(key);
   await self.clients.claim();
@@ -62,9 +62,15 @@ self.addEventListener('fetch', event => {
 });
 self.addEventListener('message', event => {
   const port = event.ports[0];
-  if (!port || !['STATUS', 'REPAIR'].includes(event.data?.type)) return;
+  if (!port || !['STATUS', 'REPAIR', 'ACTIVATE_IDLE'].includes(event.data?.type)) return;
   event.waitUntil((async () => {
     try {
+      if (event.data.type === 'ACTIVATE_IDLE') {
+        const windows = await self.clients.matchAll({type:'window',includeUncontrolled:true});
+        const own = windows.filter(c => c.url.startsWith(ROOT.href));
+        if (own.length !== 1 || own[0].id !== event.source?.id || !(await complete())) {port.postMessage({activated:false});return;}
+        await self.skipWaiting();port.postMessage({activated:true});return;
+      }
       if (event.data.type === 'REPAIR') await populate();
       port.postMessage({ready: await complete(), version: VERSION});
     } catch (error) { port.postMessage({error: error.message}); }

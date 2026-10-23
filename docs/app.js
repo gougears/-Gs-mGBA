@@ -709,7 +709,7 @@ function finishStartup(){
  if(loaded){paint();pause(false);}
 }
 $('startgame').onclick=()=>{
- if(startupStarted)return;
+ if(startupStarted||window.gsUpdatePending)return;
  startupRequested=true;audioStart(!audio);
  if(startupReady)finishStartup();
  else{$('startmessage').textContent='読み込みが終わり次第、自動で開始します…';$('startgame').textContent='起動を準備しています…';}
@@ -752,7 +752,7 @@ syncTurboIndicator();
 function deltaLayout(){const s=CELIO_SKINS[settings.skin];return s.layouts[matchMedia('(orientation: landscape)').matches?'landscape':'portrait']||s.layouts.portrait||s.layouts.landscape;}
 function fitDeltaSkin(){
  const p=$('player'),area=$('padarea');if(externalDisplay())return;
- const r=deltaLayout(),bar=document.querySelector('.playbar'),top=bar.offsetHeight||44,safeLeft=parseFloat(getComputedStyle(p).getPropertyValue('--safe-left'))||0,safeRight=parseFloat(getComputedStyle(p).getPropertyValue('--safe-right'))||0,w=p.clientWidth-safeLeft-safeRight,h=p.clientHeight-top-(parseFloat(getComputedStyle(p).paddingBottom)||0);
+ const r=deltaLayout(),bar=document.querySelector('.playbar'),top=(bar.offsetHeight||44)+($('macro-bar')?.offsetHeight||0),safeLeft=parseFloat(getComputedStyle(p).getPropertyValue('--safe-left'))||0,safeRight=parseFloat(getComputedStyle(p).getPropertyValue('--safe-right'))||0,w=p.clientWidth-safeLeft-safeRight,h=p.clientHeight-top-(parseFloat(getComputedStyle(p).paddingBottom)||0);
  const scale=Math.min(w/r.size.width,h/r.size.height),width=r.size.width*scale,height=r.size.height*scale,x=safeLeft+(w-width)/2,y=top+(h-height)/2;
  for(const [k,v]of Object.entries({x,y,w:width,h:height,sx:x+r.screen.x*scale,sy:y+r.screen.y*scale,sw:r.screen.width*scale,sh:r.screen.height*scale}))p.style.setProperty('--delta-'+k,v+'px');
  area.style.width='';area.style.height='';area.style.flex='';area.style.aspectRatio='';
