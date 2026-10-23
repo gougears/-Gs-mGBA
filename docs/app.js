@@ -165,7 +165,7 @@ $('import').onchange=async e=>{
  if(link?.active)return gameNotice('通信を終了してから読み込んでください。');
  if(!/\.sav$/i.test(file.name))return gameNotice('.savファイルを選んでください。');
  // mGBA may append a 16-byte RTC footer. Pass it intact to the core.
- if(![512,8192,32768,65536,131072,1048576,6291456].some(size=>file.size===size||file.size===size+16))return gameNotice('対応していないセーブサイズです：'+file.size.toLocaleString()+' バイト');
+ if(![512,8192,32768,65536,131072,1048576,6291456,16777216].some(size=>file.size===size||file.size===size+16))return gameNotice('対応していないセーブサイズです：'+file.size.toLocaleString()+' バイト');
  audioStart();const wasPaused=paused;closeSavePanel();pause(true);busy=true;
  try{pendingSave=new Uint8Array(await file.arrayBuffer());}
  catch(e){gameNotice('ファイルを開けません：'+e.message);pause(wasPaused);}
