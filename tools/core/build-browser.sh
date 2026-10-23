@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -eu
-# Activate Emscripten 3.1.74 first. Pass an extracted, clean hgx-1 source directory.
+# Activate Emscripten 3.1.74 first. Pass an extracted, clean rom128-1 source directory.
 source_dir=$(cd "${1:?Usage: bash tools/core/build-browser.sh SOURCE_DIR [BUILD_DIR]}" && pwd)
 bridge_dir=$(cd "$(dirname "$0")" && pwd)
-build_dir=${2:-build-hgx-1}
+build_dir=${2:-build-rom128-1}
 cp "$bridge_dir/browser.c" "$bridge_dir/browser-cheats.inc" "$bridge_dir/browser-link.cpp" "$source_dir/"
 python3 - "$source_dir" "$bridge_dir" <<'PYCODE'
 from pathlib import Path
