@@ -13,3 +13,8 @@
 
 /* Match all expanded settings to the established save cards. */
 #settingspanel .settings-section:not(#page-guide){background:#fff;border:2px solid #bbc9c9;border-radius:14px;padding:18px;box-shadow:0 4px 0 #d7dfda;margin-bottom:20px}#settingspanel .settings-section:not(#page-guide)>h3:first-child{margin-top:0}#settingspanel .note.settings-card{font-size:13px}#settingspanel .note.settings-card a{color:#285d75}#settingspanel #gamepadstatus:not(:empty){background:#fff;border:2px solid #bbc9c9;border-radius:14px;padding:14px;box-shadow:0 4px 0 #d7dfda}#settingspanel #gamepadstatus:empty{display:none}@media(max-width:360px){#settingspanel .settings-section:not(#page-guide){padding:12px}}
+
+/* Collapsible skin families and single-hand controls. */
+#skingrid{display:block}.skin-category{margin:10px 0;border:1px solid #bac8cd;border-radius:12px;background:#fff;padding:12px}.skin-category>summary{cursor:pointer;font-weight:700;padding:6px}.skin-category>.skin-grid{margin-top:12px}
+#padarea.one-hand .skin-art{opacity:.85}#padarea.one-hand .skin-hit span{pointer-events:none;position:absolute;font-size:22px;color:#fff} .hand-up{top:4%;left:42%}.hand-down{bottom:4%;left:42%}.hand-left{left:4%;top:39%}.hand-right{right:4%;top:39%}
+#padarea.one-hand .skin-hit.held{filter:brightness(1.4);color:#fff!important}
