@@ -1,11 +1,13 @@
 // Per-skin handedness, kept separate from free-layout coordinates.
 (()=>{
+ // Set true to restore the retained left/right layouts and saved preferences.
+ const ENABLE_ONE_HAND=false;
  let choices={};try{choices=JSON.parse(localStorage.getItem('gs-skin-hands-v1')||'{}')||{};}catch{}
  const supported=()=>settings.skin!=='custom'&&settings.skin!=='Cobalt'&&!CELIO_SKINS[settings.skin]?.delta;
- const mode=()=>supported()&&['left','right'].includes(choices[settings.skin])?choices[settings.skin]:'normal';
- const field=document.createElement('label');field.className='field';field.innerHTML='持ち方（ボールごとに保存）<select id="skinhand"><option value="normal">通常</option><option value="left">左持ち</option><option value="right">右持ち</option></select><small>片手用は縦画面で使用できます。横画面は通常配置です。</small>';
+ const mode=()=>ENABLE_ONE_HAND&&supported()&&['left','right'].includes(choices[settings.skin])?choices[settings.skin]:'normal';
+ const field=document.createElement('label');field.className='field';field.innerHTML='配置（ボールごとに保存）<select id="skinhand"><option value="normal">通常配置</option>'+(ENABLE_ONE_HAND?'<option value="left">左持ち</option><option value="right">右持ち</option>':'')+'</select>'+(ENABLE_ONE_HAND?'<small>片手用は縦画面で使用できます。横画面は通常配置です。</small>':'');
  $('skinselect').closest('label').after(field);
- const selector=$('skinhand');selector.onchange=()=>{choices[settings.skin]=selector.value;try{localStorage.setItem('gs-skin-hands-v1',JSON.stringify(choices));}catch{}drawSkin();};
+ const selector=$('skinhand');selector.onchange=()=>{if(!ENABLE_ONE_HAND){drawSkin();return;}choices[settings.skin]=selector.value;try{localStorage.setItem('gs-skin-hands-v1',JSON.stringify(choices));}catch{}drawSkin();};
  const original=drawSkin;
  drawSkin=function(){original();selector.value=mode();field.hidden=!supported();const area=$('padarea');area.classList.remove('one-hand');if(mode()==='normal'||landscapeSkin()||externalDisplay())return;
   area.classList.add('one-hand');
