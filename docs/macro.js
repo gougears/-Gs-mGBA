@@ -69,7 +69,7 @@ if(typeof window!=='undefined')(()=>{
   if(engine.mode!=='idle'){engine.stop();return;}if(!ready())return;
   try{
    if(scope!==context())render();
-   const item=record?null:(fromEditor?save():entry().slots?.[slot]);if(!record&&!item)throw Error('設定 → 画面・音量 → 連射・マクロで操作を登録してください。');
+   const item=record?null:(fromEditor?save():entry().slots?.[slot]);if(!record&&!item)throw Error('設定 → 一般 → 連射・マクロで操作を登録してください。');
    if(!record)GSMacroEngine.validate(item.steps);
    closeSettings();document.activeElement?.blur();pause(false);stopRapid();target=context();recordSlot=slot;
    if(record)engine.record();else engine.play(item.steps,item.repeat);

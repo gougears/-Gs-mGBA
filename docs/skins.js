@@ -72,7 +72,7 @@ case 'LureBall':return path('M77 0H243Q223 43 205 91L160 114 115 91Q97 43 77 0Z'
 case 'LevelBall':return path('M0 69Q160 95 320 69V122H0Z','#f1cc4b')+path('M125 24L149 65 207 15','#ee6557',20);
 case 'HeavyBall':return [[70,31,21],[105,85,16],[250,31,21],[215,85,16]].map(([x,y,rr])=>circle(x,y,rr+3,'#344856')+circle(x,y,rr,'#286da6')+circle(x-4,y-4,rr*.35,'#76b1de')).join('');
 case 'LoveBall':return path('M160 100C135 82 103 62 103 35C103 1 146 0 160 23C174 0 217 1 217 35C217 62 185 82 160 100Z','#fff3f6')+path('M160 84C140 67 116 54 116 34C116 15 147 13 160 40C173 13 204 15 204 34C204 54 180 67 160 84Z','#f7b7d1');
-case 'MoonBall':return path('M0 0H160V122H0Z','#39bcc5')+'<g transform="translate(24 35) scale(.85)">'+path('M196 4C142 -8 112 12 119 37C126 64 171 66 207 44C175 48 149 38 148 22C148 9 168 1 196 4Z','#f2d24d')+'</g>';
+case 'MoonBall':return path('M0 0H160V122H0Z','#39bcc5')+path('M160 20A30 30 0 1 0 189 59A25 25 0 0 1 160 20Z','#f4d85b')+path('M28 28L32 37 42 41 32 45 28 55 24 45 14 41 24 37Z','#f4d85b');
 case 'DreamBall':return path('M0 85Q70 0 137 51T260 60Q292 29 320 31V122H0Z','#df76a4')+path('M72 0Q160 -5 183 43T233 97Q267 122 298 105Q240 155 192 101T136 49Q101 20 72 0Z','#f7b5d4');
 case 'BeastBall':return Array.from({length:6},(_,i)=>path(`M${i*67-10} 0Q${i*60+40} 60 ${i*67-10} 240`,'#53c4eb',5)).join('')+[18,55,93,151,197,231].map(y=>path(`M0 ${y}Q160 ${y+35} 320 ${y}`,'#53c4eb',5)).join('')+path('M0 0H50Q54 54 99 94Q26 69 0 0ZM320 0H270Q266 54 221 94Q294 69 320 0ZM0 240H50Q54 185 99 151Q26 174 0 240ZM320 240H270Q266 185 221 151Q294 174 320 240Z','#eddb71');
 case 'SportBall':return circle(160,51,33,'#faf5e8')+circle(160,51,22,'#ed674e')+path('M122 51H198','#faf5e8',8);

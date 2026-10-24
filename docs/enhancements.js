@@ -11,7 +11,7 @@
  $('autofit').checked=settings.autoFit!==false;
  $('autofit').onchange=e=>{settings.autoFit=e.target.checked;remember();fit();};$('fitnow').onclick=fit;
  window.visualViewport?.addEventListener('resize',fit);addEventListener('resize',fit);addEventListener('orientationchange',fit);fit();
- for(const [id,label] of Object.entries({'open-controls':'操作・スキン・ボタン配置','open-audio':'音量・倍速','open-system':'端末・オフライン・更新','open-rapid':'連射の設定','open-guide':'使い方・操作ガイド'}))$(id).textContent=label;
+ for(const [id,label] of Object.entries({'open-controls':'操作・スキン・ボタン配置','open-audio':'音量・倍速','open-system':'端末・オフライン・更新','open-rapid':'連射・マクロの設定','open-guide':'使い方・操作ガイド'}))$(id).textContent=label;
  // Keep all categories adjacent to their content; prioritize everyday settings.
  const general=$('page-settings');for(const key of ['display','controls','rapid','audio']){general.append($('open-'+key),$('page-'+key));}
  const status=$('cheatstatus');let context='',rows=[],applied='',button=false,revision=0,clearedPeers=new WeakSet();
