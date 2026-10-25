@@ -3,6 +3,7 @@
 (async () => {
   const digest = '5920685f0175d61efe0fb40a3249fb4248eca5baef7c23c093cf17d6d8814e1a';
   const key = 'gs-launch-access-v1';
+  const gate = document.getElementById('access-gate');
   const form = document.getElementById('access-form');
   const input = document.getElementById('access-password');
   const button = document.getElementById('access-submit');
@@ -11,6 +12,7 @@
   async function start() {
     if (starting) return;
     starting = true;
+    gate.hidden = true;
     button.disabled = true;
     input.value = '';
     status.textContent = '起動しています…';
@@ -28,7 +30,13 @@
       document.getElementById('access-gate').remove();
       document.documentElement.classList.remove('access-locked');
     } catch {
-      status.textContent = '起動ファイルを読み込めませんでした。通信を確認してページを再読み込みしてください。';
+      const error = document.createElement('section');
+      const text = document.createElement('p');
+      text.textContent = '起動ファイルを読み込めませんでした。通信を確認して再読み込みしてください。';
+      const reload = document.createElement('button');
+      reload.type = 'button'; reload.textContent = '再読み込み';
+      reload.onclick = () => location.reload();
+      error.append(text, reload); gate.replaceChildren(error); gate.hidden = false;
     }
   }
   let remembered = false;
@@ -54,4 +62,5 @@
     }
   });
   if (remembered) await start();
+  else gate.hidden = false;
 })();
