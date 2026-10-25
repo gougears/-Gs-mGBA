@@ -14,7 +14,8 @@
   document.body.append(notice);
   const updateButton=notice.querySelector('button'),message=notice.querySelector('span');
   const settingsUpdate=document.createElement('button');settingsUpdate.type='button';settingsUpdate.textContent='最新版に更新する';settingsUpdate.hidden=true;save.after(settingsUpdate);
-  let noticeMode='checking',dismissed=false;
+  let noticeMode='checking',dismissed=false,noticeTimer;
+  const shownNotices=new Set();
   const version=document.querySelector('meta[name="gs-offline-shell"]')?.content;
   let previousVersion=null;try{previousVersion=localStorage.getItem('gs-last-launch-version');if(version)localStorage.setItem('gs-last-launch-version',version);}catch{}
   function show(mode,text){
@@ -22,7 +23,11 @@
     noticeMode=mode;message.textContent=text;
     updateButton.textContent=({waiting:'更新する',checking:'確認中…',installing:'準備中…',retry:'再確認'})[mode]||'閉じる';
     updateButton.disabled=['checking','installing'].includes(mode);
-    notice.hidden=dismissed&&!['waiting','installing','retry'].includes(mode);
+    if(!shownNotices.has(mode)){
+      shownNotices.add(mode);dismissed=false;clearTimeout(noticeTimer);
+      noticeTimer=setTimeout(()=>{dismissed=true;notice.hidden=true;},5000);
+    }
+    notice.hidden=dismissed;
     settingsUpdate.hidden=mode!=='waiting';
   }
   show('checking','更新を確認しています…');
