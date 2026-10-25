@@ -18,3 +18,9 @@
 #skingrid{display:block}.skin-category{margin:10px 0;border:1px solid #bac8cd;border-radius:12px;background:#fff;padding:12px}.skin-category>summary{cursor:pointer;font-weight:700;padding:6px}.skin-category>.skin-grid{margin-top:12px}
 #padarea.one-hand .skin-art{opacity:.85}#padarea.one-hand .skin-hit span{pointer-events:none;position:absolute;font-size:22px;color:#fff} .hand-up{top:4%;left:42%}.hand-down{bottom:4%;left:42%}.hand-left{left:4%;top:39%}.hand-right{right:4%;top:39%}
 #padarea.one-hand .skin-hit.held{filter:brightness(1.4);color:#fff!important}
+
+/* Keep the portrait home-app header attached to the viewport edge, including the safe area. */
+@media(orientation:portrait){
+ html.ios-home-app main#player:not(.delta-skin){padding-top:0!important}
+ html.ios-home-app #player:not(.delta-skin) .playbar{position:sticky;top:0;flex:0 0 calc(44px + env(safe-area-inset-top));min-height:calc(44px + env(safe-area-inset-top));padding-top:calc(4px + env(safe-area-inset-top));box-sizing:border-box;background:#111d2e}
+}

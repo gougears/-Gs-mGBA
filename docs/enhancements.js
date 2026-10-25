@@ -1,6 +1,8 @@
 'use strict';
 (()=>{
  const root=document.documentElement;
+ const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ root.classList.toggle('ios-home-app',ios&&(navigator.standalone===true||matchMedia('(display-mode: standalone)').matches));
  let resizing=0;
  function fit(){cancelAnimationFrame(resizing);resizing=requestAnimationFrame(()=>{
   const h=Math.round(window.visualViewport?.height||innerHeight),w=Math.round(window.visualViewport?.width||innerWidth);
