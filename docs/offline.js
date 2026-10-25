@@ -9,11 +9,23 @@
   }
   let registration, saving = false, lastError = '', checking = false, lastCheck = 0;
   let applying = false, reloading = false;
-  const notice=document.createElement('aside');notice.id='update-notice';notice.hidden=true;notice.setAttribute('aria-label','エミュの更新');
-  notice.innerHTML='<span role="status">新しい更新があります</span><button type="button">更新する</button>';
+  const notice=document.createElement('aside');notice.id='update-notice';notice.hidden=false;notice.setAttribute('aria-label','エミュの更新');
+  notice.innerHTML='<span role="status">更新を確認しています…</span><button type="button">確認中…</button>';
   document.body.append(notice);
   const updateButton=notice.querySelector('button'),message=notice.querySelector('span');
   const settingsUpdate=document.createElement('button');settingsUpdate.type='button';settingsUpdate.textContent='最新版に更新する';settingsUpdate.hidden=true;save.after(settingsUpdate);
+  let noticeMode='checking',dismissed=false;
+  const version=document.querySelector('meta[name="gs-offline-shell"]')?.content;
+  let previousVersion=null;try{previousVersion=localStorage.getItem('gs-last-launch-version');if(version)localStorage.setItem('gs-last-launch-version',version);}catch{}
+  function show(mode,text){
+    if(applying)return;
+    noticeMode=mode;message.textContent=text;
+    updateButton.textContent=({waiting:'更新する',checking:'確認中…',installing:'準備中…',retry:'再確認'})[mode]||'閉じる';
+    updateButton.disabled=['checking','installing'].includes(mode);
+    notice.hidden=dismissed&&!['waiting','installing','retry'].includes(mode);
+    settingsUpdate.hidden=mode!=='waiting';
+  }
+  show('checking','更新を確認しています…');
   async function applyWaiting() {
     if (!registration?.waiting || applying) return;
     if (window.gsUpdatePending || window.gsLayoutEditing || busy || saving) return;
@@ -31,11 +43,12 @@
     }catch(error){message.textContent=error.message;}
     window.gsUpdatePending=false;applying=false;updateButton.disabled=settingsUpdate.disabled=false;pause(previousPause);
   }
-  updateButton.onclick=settingsUpdate.onclick=applyWaiting;
+  settingsUpdate.onclick=applyWaiting;
+  updateButton.onclick=()=>{if(noticeMode==='waiting')return applyWaiting();if(noticeMode==='retry')return checkUpdate(true);dismissed=true;notice.hidden=true;};
   async function checkUpdate(force=false) {
     if (!registration || checking || !navigator.onLine || (!force && Date.now()-lastCheck<60000)) return;
-    checking=true;lastCheck=Date.now();
-    try {await registration.update();await refresh();} catch {} finally {checking=false;}
+    checking=true;lastCheck=Date.now();if(!registration.waiting)show('checking','更新を確認しています…');
+    try {await registration.update();} catch {show('retry','更新を確認できませんでした。通信を確認してください');checking=false;return;} finally {checking=false;}await refresh();
   }
   navigator.serviceWorker.addEventListener('message', ({data}) => { if(data?.type === 'OFFLINE_ERROR'){lastError=data.message;set('保存できません：'+lastError);} });
   function ask(worker, type) {
@@ -50,14 +63,16 @@
     if (saving || !registration) return;
     if(lastError){set('保存できません：'+lastError);return;}
     if (registration.waiting) {
-      notice.hidden=settingsUpdate.hidden=false;set('新しい更新があります。ゲーム内でセーブしてから「更新する」を押してください。');return;
+      show('waiting','新しい更新があります');set('新しい更新があります。ゲーム内でセーブしてから「更新する」を押してください。');return;
     }
-    if (registration.installing) { set('オフライン用に本体・スキンを保存中…'); return; }
+    if (registration.installing) { show('installing','更新ファイルを準備しています…');set('オフライン用に本体・スキンを保存中…'); return; }
     if (!registration.active) { set('まだ保存できていません。「保存・更新を確認」を押してください。'); return; }
     try {
       const result = await ask(registration.active, 'STATUS');
+      if(registration.waiting||registration.installing)return refresh();
+      if(!checking)show('done',!navigator.onLine?'オフラインのため更新確認はできません':previousVersion&&version&&previousVersion!==version?'新しい版に更新されました':'現在、新しい更新はありません');
       set(result.ready ? 'オフライン準備完了。本体・全スキンを保存済みです。' + (navigator.onLine ? '' : ' 現在オフラインです。') : 'オフライン用の保存が不足しています。オンラインで「保存・更新を確認」を押してください。');
-    } catch (error) { set(error.message); }
+    } catch (error) { set(error.message);show('retry','更新状態を確認できませんでした'); }
   }
   function watch() {
     const worker = registration.installing;
@@ -88,5 +103,5 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) {checkUpdate();refresh();} });
   document.getElementById('clearcache')?.addEventListener('click', () => set('キャッシュ削除後はオフラインで起動できません。オンラインで「保存・更新を確認」を押してください。'));
   setInterval(()=>{if(!document.hidden)checkUpdate();},300000);
-  register().then(()=>checkUpdate(true)).catch(error => {lastError=error.name+': '+error.message;set('保存を開始できません：'+lastError);});
+  register().then(()=>checkUpdate(true)).catch(error => {lastError=error.name+': '+error.message;set('保存を開始できません：'+lastError);show('retry','更新確認を開始できませんでした');});
 })();
