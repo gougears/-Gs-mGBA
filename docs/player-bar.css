@@ -38,3 +38,8 @@ main#player.delta-skin{padding-bottom:env(safe-area-inset-bottom)!important}#pla
 #player .rapid-state.rapid-on{background:#176547!important;color:#fff9c4!important;border-color:#9df2bd!important;box-shadow:0 0 8px #5bd99580}
 #player .rapid-state.rapid-armed{background:#805500!important;color:#fff!important;border-color:#ffda75!important}
 @media(orientation:landscape){#player.landscape-skin .game-stage{top:6%}#player.landscape-skin .turbo-state{font-size:12px!important}}
+
+/* Toolbar rapid control matches its neighbours; keep state readable without glow. */
+#player .playbar #rapidbutton{background:#263d61!important;color:#f1f5ff!important;border:1px solid #ffffff25!important;border-radius:9px;font:400 11px system-ui,sans-serif!important;line-height:normal!important;box-shadow:none!important}
+#player .playbar #rapidbutton.rapid-on{background:#275345!important;border-color:#6eaa94!important}
+#player .playbar #rapidbutton.rapid-armed{background:#635638!important;border-color:#ad9867!important}
