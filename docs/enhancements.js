@@ -12,7 +12,17 @@
  });}
  $('autofit').checked=settings.autoFit!==false;
  $('autofit').onchange=e=>{settings.autoFit=e.target.checked;remember();fit();};$('fitnow').onclick=fit;
- window.visualViewport?.addEventListener('resize',fit);addEventListener('resize',fit);addEventListener('orientationchange',fit);fit();
+ window.visualViewport?.addEventListener('resize',fit);addEventListener('resize',fit);
+ // iOS can report the old viewport during orientationchange. Refit after settling.
+ let rotationTimers=[];
+ function rotated(){
+  rotationTimers.forEach(clearTimeout);rotationTimers=[];
+  const panel=$('settingspanel');
+  if(!panel.hidden&&panel.contains(document.activeElement))document.activeElement.blur();
+  const settle=()=>{fit();if(!panel.hidden){panel.scrollTop=0;panel.scrollLeft=0;const nav=panel.querySelector('.settings-navigation');nav.scrollTop=0;nav.scrollLeft=0;renderLayoutPreview();}};
+  settle();for(const delay of [150,450])rotationTimers.push(setTimeout(settle,delay));
+ }
+ addEventListener('orientationchange',rotated);matchMedia('(orientation: landscape)').addEventListener('change',rotated);fit();
  for(const [id,label] of Object.entries({'open-controls':'操作・スキン・ボタン配置','open-audio':'音量・倍速','open-system':'端末・オフライン・更新','open-rapid':'連射・マクロの設定','open-guide':'使い方・操作ガイド'}))$(id).textContent=label;
  // Keep all categories adjacent to their content; prioritize everyday settings.
  const general=$('page-settings');for(const key of ['display','controls','rapid','audio']){general.append($('open-'+key),$('page-'+key));}
