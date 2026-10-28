@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Regenerate sw.js after ANY runtime asset change. Excludes user ROMs and source ZIPs."""
-import hashlib,json,sys,re
+import hashlib,json,sys,re,base64
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -8,6 +8,11 @@ root=Path(sys.argv[1])
 # Hosting may append instrumentation to HTML; a generated release marker binds the shell.
 html=root/'index.html'
 text=re.sub(r'<meta name="gs-offline-shell" content="[a-f0-9]+">','',html.read_text())
+# Keep the inline stylesheet allowed by CSP whenever settings styles change.
+styles=re.search(r'<style id="initialstyles">(.*?)</style>',text,re.S)
+if styles:
+    style_hash=base64.b64encode(hashlib.sha256(styles.group(1).encode()).digest()).decode()
+    text=re.sub(r"style-src 'self' 'sha256-[^']+'", "style-src 'self' 'sha256-"+style_hash+"'",text)
 # Generate a version from runtime contents; normalize the generated display first.
 text=re.sub(r'(<strong id="app-version">)[^<]*(</strong>)',r'\1VERSION\2',text)
 fingerprint=hashlib.sha256(text.encode())

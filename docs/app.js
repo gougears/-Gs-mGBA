@@ -198,7 +198,7 @@ for(const id of ['topreset']){
 }
 let rapidArmed=false,rapidMask=0,rapidBaseline=0;
 function stopRapid(){rapidArmed=false;rapidMask=0;rapidBaseline=0;syncRapidStatus();}
-function syncRapidStatus(){const message=rapidArmed?'連射するボタンを押してください':rapidMask?'連射ON · '+(settings.rapidMode==='auto'?'自動':'押している間'):'連射OFF';$('rapidstatus').textContent=message;$('rapidbutton').textContent=rapidArmed?'連射選択中':rapidMask?'連射ON':'連射';$('rapidbutton').setAttribute('aria-pressed',String(rapidArmed||!!rapidMask));}
+function syncRapidStatus(){const message=rapidArmed?'連射するボタンを押してください':rapidMask?'連射ON · '+(settings.rapidMode==='auto'?'自動':'押している間'):'連射OFF';$('rapidstatus').textContent=message;for(const b of document.querySelectorAll('#rapidbutton,#custom-rapid,.rapid-state')){b.classList.add('rapid-state');b.textContent=rapidArmed?'連射 選択中':rapidMask?'連射 ON':'連射 OFF';b.classList.toggle('rapid-on',!!rapidMask);b.classList.toggle('rapid-armed',rapidArmed);b.setAttribute('aria-pressed',String(!!rapidMask));b.setAttribute('aria-label',b.textContent);}}
 function toggleRapid(){if(rapidArmed||rapidMask){stopRapid();return;}if(!loaded||paused||busy)return gameNotice('ゲームを再開してから連射を設定してください。');rapidArmed=true;rapidBaseline=keys;syncRapidStatus();gameNotice('連射したいボタンを押してください。');}
 function rapidFrameKeys(now=Date.now()){if(!rapidMask)return keys;const active=settings.rapidMode==='auto'?rapidMask:rapidMask&keys;return (keys&~rapidMask)|((Math.floor(now*settings.rapidRate*2/1000)%2===0)?active:0);}
 function updateKeys(){keys=0;for(const v of held.values())for(const k of (Array.isArray(v)?v:[v]))keys|=1<<k;if(rapidArmed){rapidBaseline&=keys;const picked=keys&~rapidBaseline;if(picked){rapidMask=picked&-picked;rapidArmed=false;syncRapidStatus();}}}
@@ -292,11 +292,19 @@ function drawSkin(){
   else if(name==='dpad'){
    if(settings.direction==='stick'){b.classList.add('stick-control');b.setAttribute('aria-label','スティック');}
    bindDirection(b,settings.direction==='stick');
-  }else b.onclick=()=>{if(name==='menu')$('settingsopen').onclick();else if(name==='quickSave')return quickSaveSelected();else if(name==='quickLoad')return quickLoadSelected();else if(name==='rapidFire')toggleRapid();else if(name==='toggleFastForward'&&loaded)toggleTurbo();};
-  if(name==='toggleFastForward')updateTurboButton(b);
+  }else bindSkinAction(b,()=>{if(name==='menu')$('settingsopen').onclick();else if(name==='quickSave')return quickSaveSelected();else if(name==='quickLoad')return quickLoadSelected();else if(name==='rapidFire')toggleRapid();else if(name==='toggleFastForward'&&loaded)toggleTurbo();});
+  if(name==='toggleFastForward')updateTurboButton(b);if(name==='rapidFire')b.classList.add('rapid-state');
   b.addEventListener('contextmenu',e=>e.preventDefault());area.append(b);
  }
- addScreenshotHit(area);
+ addScreenshotHit(area);syncRapidStatus();
+}
+// Pointer release supports touch while another finger holds a game button.
+function bindSkinAction(b,action){
+ let pointer=null;
+ b.addEventListener('pointerdown',e=>{if(e.button!==0||pointer!==null)return;e.preventDefault();pointer=e.pointerId;b.setPointerCapture(pointer);b.classList.add('held');});
+ b.addEventListener('pointerup',e=>{if(e.pointerId!==pointer)return;e.preventDefault();pointer=null;b.classList.remove('held');const r=b.getBoundingClientRect();if(e.clientX>=r.left-6&&e.clientX<=r.right+6&&e.clientY>=r.top-6&&e.clientY<=r.bottom+6)action();});
+ for(const name of ['pointercancel','lostpointercapture'])b.addEventListener(name,()=>{pointer=null;b.classList.remove('held');});
+ b.onclick=e=>{if(e.detail===0)action();};
 }
 function bindKey(b){b.addEventListener('pointerdown',e=>{e.preventDefault();if(!loaded||paused||busy)return;audioStart();b.setPointerCapture(e.pointerId);held.set(e.pointerId,b.dataset.keys?b.dataset.keys.split(',').map(Number):+b.dataset.key);b.classList.add('held');updateKeys();});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,e=>{held.delete(e.pointerId);b.classList.remove('held');updateKeys();});b.addEventListener('contextmenu',e=>e.preventDefault());}
 for(const b of document.querySelectorAll('[data-key]'))if(!b.closest('.dpad'))bindKey(b);
@@ -602,7 +610,7 @@ $('keepawake').onchange=async e=>{settings.keepAwake=e.target.checked;remember()
 
 function addScreenshotHit(area){
  if(settings.skin==='custom')return;
- const b=document.createElement('button');b.className='skin-hit';b.dataset.screenshot='true';b.setAttribute('aria-label','撮影メニュー・録画停止');Object.assign(b.style,{left:'44.6875%',top:'50.833333%',width:'10.625%',height:'14.166667%',borderRadius:'50%'});if(settings.skin!=='Cobalt'&&settings.skin!=='custom'&&!landscapeSkin())Object.assign(b.style,{top:(184/portraitSkinHeight*100)+'%',height:(34/portraitSkinHeight*100)+'%'});if(settings.skin==='Cobalt'&&!landscapeSkin()){const f=CELIO_SKINS.Cobalt.screenshot;Object.assign(b.style,{left:(f.x/1290*100)+'%',top:(f.y/1616*100)+'%',width:(f.width/1290*100)+'%',height:(f.height/1616*100)+'%'});}if(landscapeSkin())Object.assign(b.style,{left:'47.5%',top:'89%',width:'5%',height:'10.83%',background:'radial-gradient(circle,#fff 0 22%,#26364b 24% 36%,transparent 38%),linear-gradient(#d64149 43%,#26364b 44% 56%,#fff 57%)',border:'2px solid #26364b'});if(settings.skin==='custom'){const size=34*customPadScale();Object.assign(b.style,{width:size+'px',height:size+'px',left:((area.clientWidth-size)/2)+'px',top:((area.clientHeight-size)/2)+'px'});}b.onclick=()=>requestCapture();area.append(b);
+ const b=document.createElement('button');b.className='skin-hit';b.dataset.screenshot='true';b.setAttribute('aria-label','撮影メニュー・録画停止');Object.assign(b.style,{left:'44.6875%',top:'50.833333%',width:'10.625%',height:'14.166667%',borderRadius:'50%'});if(settings.skin!=='Cobalt'&&settings.skin!=='custom'&&!landscapeSkin())Object.assign(b.style,{top:(184/portraitSkinHeight*100)+'%',height:(34/portraitSkinHeight*100)+'%'});if(settings.skin==='Cobalt'&&!landscapeSkin()){const f=CELIO_SKINS.Cobalt.screenshot;Object.assign(b.style,{left:(f.x/1290*100)+'%',top:(f.y/1616*100)+'%',width:(f.width/1290*100)+'%',height:(f.height/1616*100)+'%'});}if(landscapeSkin())Object.assign(b.style,{left:(310/812*100)+'%',top:(324/375*100)+'%',width:(52/812*100)+'%',height:(44/375*100)+'%',background:'radial-gradient(circle,#fff 0 22%,#26364b 24% 36%,transparent 38%),linear-gradient(#d64149 43%,#26364b 44% 56%,#fff 57%)',border:'2px solid #26364b'});if(settings.skin==='custom'){const size=34*customPadScale();Object.assign(b.style,{width:size+'px',height:size+'px',left:((area.clientWidth-size)/2)+'px',top:((area.clientHeight-size)/2)+'px'});}b.onclick=()=>requestCapture();area.append(b);
 }
 function requestCapture(fromPad=false){
  if(recordingSession)return stopGameRecording();
