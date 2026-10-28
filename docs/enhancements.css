@@ -45,3 +45,13 @@
 /* Avoid Safari's rotation-dependent text inflation and stale sheet height. */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #settingspanel.settings-sheet{height:var(--viewport-h,100dvh);box-sizing:border-box}
+
+/* Keep the same scroll container across rotation to avoid stale iOS hit regions. */
+@media(orientation:portrait){
+ #settingspanel.settings-sheet{display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+ #settingspanel.settings-sheet[hidden]{display:none!important}
+ #settingspanel.settings-sheet .settings-navigation{position:relative;top:auto;margin:0;padding:0 16px 12px;min-height:0;overflow:hidden}
+ #settingspanel.settings-sheet .settings-head{margin:0 -16px 12px}
+ #settingspanel.settings-sheet #settingscontent{min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:18px 16px 35px;overscroll-behavior:contain;scroll-padding:18px;-webkit-overflow-scrolling:auto}
+}
+#settingspanel.settings-sheet #settingscontent{-webkit-overflow-scrolling:auto}
