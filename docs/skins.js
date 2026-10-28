@@ -113,7 +113,7 @@ for(const v of variants){const [key,name,top,bottom,type,group]=v,base=JSON.pars
 
 // Spacious landscape controls; artwork and hit targets share these frames.
 (()=>{
- const positions={l:[20,10,136,46],r:[656,10,136,46],menu:[20,68,136,48],toggleFastForward:[656,68,136,48],select:[20,316,136,48],start:[656,316,136,48],quickSave:[190,324,104,44],quickLoad:[510,324,104,44],rapidFire:[378,324,116,44],'a+b':[686,260,106,44]};
+ const positions={l:[20,10,136,46],r:[656,10,136,46],menu:[34,74,108,36],toggleFastForward:[670,74,108,36],select:[20,316,136,48],start:[656,316,136,48],quickSave:[190,324,104,44],quickLoad:[510,324,104,44],rapidFire:[378,324,116,44],'a+b':[686,260,106,44]};
  const labels={menu:'MENU',toggleFastForward:'TURBO OFF',select:'SELECT',start:'START',quickSave:'Q.SAVE',quickLoad:'Q.LOAD',rapidFire:'連射 OFF'};
  for(const base of Object.values(CELIO_SKINS)){
   if(!base.landscape||base.delta)continue;
@@ -127,7 +127,7 @@ for(const v of variants){const [key,name,top,bottom,type,group]=v,base=JSON.pars
    const {x,y,width:w,height:h}=item.frame;
    if(key==='dpad'){
     art+=`<path d="M${x+w/3} ${y}h${w/3}v${h/3}h${w/3}v${h/3}h-${w/3}v${h/3}h-${w/3}v-${h/3}h-${w/3}v-${h/3}h${w/3}Z" fill="#344455" stroke="#142331" stroke-width="3"/>`;
-    for(const [dx,dy,t]of [[.5,.23,'▲'],[.16,.56,'◀'],[.84,.56,'▶'],[.5,.9,'▼']])art+=`<text x="${x+w*dx}" y="${y+h*dy}" text-anchor="middle" fill="#e7eef5" font-size="22">${t}</text>`;
+    for(const [dx,dy,t]of [[.5,.23,'▲'],[.16,.56,'◀'],[.84,.56,'▶'],[.5,.9,'▼']])art+=`<path d="M-9 7L0-9L9 7Z" transform="translate(${x+w*dx} ${y+h*(dy-.04)}) rotate(${t==='◀'?-90:t==='▶'?90:t==='▼'?180:0})" fill="#e7eef5"/>`;
    }else{
     const round=key==='a'||key==='b'?w/2:10;
     art+=`<rect x="${x}" y="${y+3}" width="${w}" height="${h}" rx="${round}" fill="#142331"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${round}" fill="#344b60" stroke="#8ba2b5" stroke-width="2"/><text x="${x+w/2}" y="${y+h/2}" dy=".35em" text-anchor="middle" font-family="sans-serif" font-size="${round>10?28:14}" font-weight="bold" fill="white">${labels[key]||key.toUpperCase()}</text>`;
