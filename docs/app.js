@@ -412,8 +412,12 @@ async function restoreRememberedROMs(){
  try{for(let i=0;i<2;i++){const record=await dbOp('roms','get',i);if(!record?.bytes||record.closed)continue;await selectPlayer(i);const bytes=record.bytes instanceof Uint8Array?record.bytes:new Uint8Array(record.bytes);await $('rom').onchange({target:{files:[{name:record.name,size:bytes.byteLength}],value:''},rememberedBytes:bytes,rememberedDigest:record.digest});}if(players[0].loaded)await selectPlayer(0);}
  catch(e){tell('記憶ROMを読み込めません：'+e.message);}finally{restoringROM=false;playerUI();}
 }
+// An interrupted startup must not repeatedly auto-load the same large ROMs.
+let safeStartup=new URL(location.href).searchParams.get('safe-start')==='1';
+try{safeStartup=safeStartup||sessionStorage.getItem('gs-safe-start')==='1'||sessionStorage.getItem('gs-startup-pending')==='1';sessionStorage.removeItem('gs-safe-start');sessionStorage.setItem('gs-startup-pending','1');}catch{}
+if(new URL(location.href).searchParams.has('safe-start')){const url=new URL(location.href);url.searchParams.delete('safe-start');history.replaceState(null,'',url.href);}
 // Read remembered ROMs one at a time; do not retain both large files during startup.
-try{createCelio({print:()=>{},printErr:()=>{}}).then(async m=>{M=m;capturePlayer();localLink=createLocalCelioLink(()=>players.map(p=>p.loaded?p.M:null),linkHooks);link=localLink;playerUI();tell('ROMを選んでください · 端末内で処理します');await restoreRememberedROMs();startupReady=true;$('startgame').disabled=false;$('startmessage').textContent=loaded?'記憶したROMで再開します':'開始後にROMを選んでください';if(startupRequested&&!document.hidden)finishStartup();requestAnimationFrame(loop);}).catch(e=>{tell('エンジンを起動できません：'+e.message);$('startmessage').textContent='起動できません。ページを再読み込みしてください。';});}catch(e){tell('エンジン読込エラー。Safariでページを再読み込みしてください。');}
+try{createCelio({print:()=>{},printErr:()=>{}}).then(async m=>{M=m;capturePlayer();localLink=createLocalCelioLink(()=>players.map(p=>p.loaded?p.M:null),linkHooks);link=localLink;playerUI();tell('ROMを選んでください · 端末内で処理します');if(!safeStartup)await restoreRememberedROMs();startupReady=true;window.gsStartupReady=true;try{sessionStorage.removeItem('gs-startup-pending');}catch{}window.dispatchEvent(new Event('gs-startup-ready'));$('startgame').disabled=false;$('startmessage').textContent=loaded?'記憶したROMで再開します':safeStartup?'復旧起動：自動読込を停止しました。開始後にROMを選んでください。':'開始後にROMを選んでください';if(startupRequested&&!document.hidden)finishStartup();requestAnimationFrame(loop);}).catch(e=>{tell('エンジンを起動できません：'+e.message);$('startmessage').textContent='起動できません。ページを再読み込みしてください。';});}catch(e){tell('エンジン読込エラー。Safariでページを再読み込みしてください。');}
 
 
 for(const name of ['contextmenu','selectstart','dragstart'])document.addEventListener(name,e=>e.preventDefault());

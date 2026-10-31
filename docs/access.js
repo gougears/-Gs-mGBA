@@ -17,6 +17,17 @@
     input.value = '';
     status.textContent = '起動しています…';
     document.documentElement.classList.remove('access-locked');
+    // Recovery is independent of the emulator scripts, including a stalled download.
+    const recoveryTimer=setTimeout(()=>{
+      if(window.gsStartupReady)return;
+      const host=document.getElementById('startgate');if(!host)return;
+      const box=document.createElement('section');box.id='startup-recovery';
+      const message=document.createElement('p');message.textContent='起動に時間がかかっています。ROMの自動読込を止めて開き直せます。保存データは削除しません。';
+      const retry=document.createElement('button');retry.type='button';retry.textContent='ROMを読み込まずに再起動';
+      retry.onclick=()=>{try{sessionStorage.setItem('gs-safe-start','1');}catch{}const url=new URL(location.href);url.searchParams.set('safe-start','1');location.replace(url.href);};
+      box.append(message,retry);host.append(box);
+    },20000);
+    window.addEventListener('gs-startup-ready',()=>{clearTimeout(recoveryTimer);document.getElementById('startup-recovery')?.remove();},{once:true});
     try {
       for (const pending of document.querySelectorAll('script[data-gs-src]')) {
         await new Promise((resolve, reject) => {
