@@ -1,0 +1,17 @@
+#photo-button-color,#photo-text-color{display:block;width:100%;height:44px;padding:3px!important;cursor:pointer}
+#player #padarea.photo-skin{background:#13243a var(--photo-image) center/var(--photo-fit) no-repeat!important}
+#player #padarea.photo-skin .padgroup button{background:linear-gradient(145deg,#ffffff70,transparent 45%,#0008),var(--photo-button)!important;color:var(--photo-text)!important;border:1px solid #ffffff80!important;box-shadow:inset 0 2px 2px #fff8,inset 0 -3px 4px #0006,0 4px 0 #101c2b,0 6px 8px #0007!important}
+#player #padarea.photo-skin .dpad .center{background:var(--photo-button)}
+#player #padarea.photo-skin .direction-arm{background:transparent!important;border:0!important;box-shadow:none!important}
+#player #padarea.photo-skin .turbo-on,#player #padarea.photo-skin .rapid-on{outline:2px solid #9df2bd;outline-offset:1px}
+#player #padarea .sculpted-button{background:linear-gradient(145deg,#839bab 0%,#415a6d 18%,#263b4e 65%,#172635 100%)!important;color:#f4f8fb!important;border:1px solid #93a9b9!important;border-radius:10px;text-shadow:0 1px 2px #0009;box-shadow:inset 0 2px 2px #fff6,inset 0 -3px 3px #0007,0 3px 0 #101b26,0 5px 6px #0005;font:700 clamp(8px,2.8vw,14px)/1.1 system-ui;display:flex;align-items:center;justify-content:center}
+#player #padarea .sculpted-round{border-radius:50%;font-size:clamp(20px,6vw,34px);background:radial-gradient(ellipse at 35% 22%,#91a3b2,#42586b 48%,#223548 78%)!important}
+#player #padarea .sculpted-button.held,#player #padarea .sculpted-button:active{box-shadow:inset 0 2px 5px #0009,0 1px 0 #101b26;filter:brightness(.85)}
+#player #padarea .sculpted-button.turbo-on,#player #padarea .sculpted-button.rapid-on{background:linear-gradient(145deg,#75b996,#236e50 48%,#123d30)!important;border-color:#a3efbf!important}
+#player #padarea .sculpted-button.rapid-armed{background:linear-gradient(145deg,#d2b167,#856019 60%,#47350f)!important}
+#padarea.sculpted-skin .cross-direction{filter:drop-shadow(0 3px 1px #0006)}
+#padarea.sculpted-skin .cross-direction::before{content:'';position:absolute;inset:0;background:linear-gradient(140deg,#91a5b4,#435b70 23%,#263b4e 65%,#152433);clip-path:polygon(33% 0,67% 0,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0 67%,0 33%,33% 33%);pointer-events:none}
+#padarea:is(.sculpted-skin,.photo-skin) .direction-arm::after{content:'';position:absolute;left:50%;top:50%;width:35%;height:35%;background:#e2ebf2;clip-path:polygon(50% 0,100% 100%,0 100%);transform:translate(-50%,-50%);pointer-events:none}
+#padarea:is(.sculpted-skin,.photo-skin) .direction-arm.down::after{transform:translate(-50%,-50%) rotate(180deg)}
+#padarea:is(.sculpted-skin,.photo-skin) .direction-arm.left::after{transform:translate(-50%,-50%) rotate(-90deg)}
+#padarea:is(.sculpted-skin,.photo-skin) .direction-arm.right::after{transform:translate(-50%,-50%) rotate(90deg)}
