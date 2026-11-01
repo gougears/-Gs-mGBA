@@ -61,7 +61,7 @@ case 'wing':case 'jet':return path('M160 110L45 15 85 75 25 50 110 115ZM160 110L
 case 'metal':case 'gigaton':return [35,100,220,285].map(x=>circle(x,35,12,'#b4ad94')+circle(x,35,4,'#424849')).join('')+(type==='gigaton'?path('M65 0V120M255 0V120','#bca56b',17):'');
 default:return '';
 }}
-function svg(w,h,body){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">${body}</svg>`);}
+function svg(w,h,body,stretch=false){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" ${stretch?'preserveAspectRatio="none"':''}>${body}</svg>`);}
 
 // Redrawn from the user-specified visual references (see BALL-DESIGN-REFERENCES.md).
 function referenceMotif(key){switch(key){
@@ -109,6 +109,20 @@ function hisuiFace(v){
 
 function face(v){const [key,name,top,bottom,type,group]=v;if(group==='hisui')return hisuiFace(v);const band=type==='origin'?'#c7ad68':type==='premier'?'#d44845':group==='hisui'?'#594d38':'#263440';let wood=group==='hisui'&&!['metal','gigaton','origin'].includes(type)?[143,160,180,199].map(y=>path(`M0 ${y}Q85 ${y-9} 160 ${y}T320 ${y}`, '#9a7a4b',2)).join(''):'';return `<rect width="320" height="240" fill="${bottom}"/><path d="M0 0H320V122H0Z" fill="${top}"/>${referenceMotif(key)??motif(type)}${type==='dream'?path('M0 150Q65 200 113 151T221 151T320 150V176Q267 218 221 185T113 185T0 176Z','#d890b6'):''}${wood}<path d="M0 118H320" stroke="${band}" stroke-width="9"/>${circle(160,118,21,band)}${circle(160,118,14,key==='CherishBall'?'#e35136':key==='StrangeBall'?'#bfe5cd':'#f4f4e9')}${circle(160,118,7,group==='hisui'?'#725d3c':'#b2bcc4')}`;}
 for(const v of variants){const [key,name,top,bottom,type,group]=v,base=JSON.parse(JSON.stringify(CELIO_SKINS.PokeBall));base.name=name+(group==='hisui'?'（ヒスイ）':'');base.group=group||'normal';base.bodyColor=bottom;const art=face(v);base.artPlain=svg(320,240,art);let labels='';const box=(x,y,w,h,text)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#273a4b" stroke="#8294a1"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#f5f6ed">${text}</text>`;for(const [x,y,w,h,t] of [[8,3,92,28,'Q.SAVE'],[114,3,92,28,'TURBO'],[220,3,92,28,'Q.LOAD'],[6,47,100,36,'L'],[116,47,88,36,'MENU'],[214,47,100,36,'R']])labels+=box(x,y,w,h,t);base.artBody=svg(320,250,`<rect width="320" height="250" fill="${bottom}"/><g transform="translate(0 66)">${art}</g>${labels}`);base.artControls='skins/PokeBall-controls.svg';base.artActions='skins/PokeBall-actions.svg';let land=`<rect width="812" height="375" rx="18" fill="${bottom}"/><svg x="0" y="0" width="812" height="375" viewBox="0 0 320 240" preserveAspectRatio="none">${art}</svg>`;for(const item of base.landscape.items){const f=item.frame;if(Array.isArray(item.inputs)){const k=item.inputs.join('+');land+=box(f.x,f.y,f.width,f.height,({menu:'MENU',quickSave:'Q.SAVE',quickLoad:'Q.LOAD',toggleFastForward:'TURBO'})[k]||k.toUpperCase());}else{const x=f.x,y=f.y,w=f.width,h=f.height;land+=path(`M${x+w/3} ${y}h${w/3}v${h/3}h${w/3}v${h/3}h-${w/3}v${h/3}h-${w/3}v-${h/3}h-${w/3}v-${h/3}h${w/3}Z`,'#273a4b');}}base.artLandscape=svg(812,375,land);CELIO_SKINS[key]=base;}
+// Button materials reuse the same motifs, independently of the background artwork.
+const buttonVariants=[...variants,
+ ['PokeBall','', '#dd4149','#f5f4ed','plain'],['GreatBall','','#287ac1','#f5f4ed','great'],
+ ['UltraBall','','#252932','#f5f4ed','ultra'],['QuickBall','','#287ead','#f5f4ed','quick'],
+ ['DiveBall','','#419fcc','#f5f4ed','dive'],['LuxuryBall','','#242831','#242831','luxury'],
+ ['GoldBall','','#e9bc48','#e9bc48','plain']];
+for(const v of buttonVariants){const base=CELIO_SKINS[v[0]];if(!base)continue;
+ let art=face(v);
+ if(v[4]==='quick')art=art+path('M95 0L145 65 100 110M225 0L175 65 220 110','#f5d652',22);
+ if(v[4]==='dive')art+=path('M0 65Q40 25 80 65T160 65T240 65T320 65','#c9f1fa',20);
+ if(v[4]==='luxury')art+=path('M0 35H320M0 90H320','#d6af55',8)+path('M0 118H320','#d65751',7);
+ base.buttonTheme={color:v[0]==='MoonBall'?'#13aabe':v[2],edge:v[0]==='PremierBall'?'#d95257':'#e7c76d',art:svg(320,240,art,true),panel:svg(320,112,art,true)};
+}
+
 })();
 
 // Spacious landscape controls; artwork and hit targets share these frames.

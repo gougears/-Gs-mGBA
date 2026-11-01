@@ -13,6 +13,7 @@
  const option=document.createElement('option');option.value='free';option.textContent='自由配置';$('skinhand').append(option);
  const oldChange=$('skinhand').onchange;$('skinhand').onchange=e=>{const key=settings.skin;if(e.target.value==='free'){if(layouts[key]?.data){layouts[key].active=true;localStorage.setItem('gs-ball-layouts-v1',JSON.stringify(layouts));drawSkin();}else $('layout-live-open').click();return;}if(layouts[key]){layouts[key].active=false;localStorage.setItem('gs-ball-layouts-v1',JSON.stringify(layouts));}oldChange(e);};
  window.gsBallLayout={
+  get skinKey(){return editing||settings.skin;},
   begin(){const key=settings.skin;if(!supported(key))return null;editing=key;if(layouts[key]?.data)Object.assign(settings,copy(layouts[key].data));return key;},
   save(key){const next={...layouts,[key]:{active:true,data:pick()}};localStorage.setItem('gs-ball-layouts-v1',JSON.stringify(next));layouts=next;},
   finish(){editing=null;}
