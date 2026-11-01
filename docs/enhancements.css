@@ -61,3 +61,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
  html.ios-home-app #player .playbar{position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:auto!important;width:100%;height:calc(44px + env(safe-area-inset-top));min-height:calc(44px + env(safe-area-inset-top));background:#111d2e;z-index:6;transform:none;backdrop-filter:none;-webkit-backdrop-filter:none}
  html.ios-home-app #player:not(.delta-skin)::before{content:'';display:block;flex:0 0 calc(44px + env(safe-area-inset-top));pointer-events:none}
 }
+/* Keep toolbar text below the iOS home-app top fade region. */
+@media(orientation:portrait){
+ html.ios-home-app #player .playbar{height:calc(68px + env(safe-area-inset-top));min-height:calc(68px + env(safe-area-inset-top));padding-top:calc(28px + env(safe-area-inset-top))!important}
+ html.ios-home-app #player:not(.delta-skin)::before{flex-basis:calc(68px + env(safe-area-inset-top))}
+}
