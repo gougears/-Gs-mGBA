@@ -1,21 +1,24 @@
-/* Theme paint only: preserve hit geometry, backgrounds, labels and input handlers. */
+/* Dedicated shell artwork; native labels and hit targets remain interactive. */
 #player #padarea.ball-buttons .ball-button{
- background:linear-gradient(175deg,#ffffffb0 0%,#ffffff18 12%,transparent 40%,#0009 100%),var(--ball-panel) center/100% 100% no-repeat,var(--ball-color)!important;
- color:#fff!important;border:2px solid var(--ball-edge)!important;border-radius:12px;
- box-shadow:inset 0 0 0 2px #132738,inset 0 3px 2px #fff9,inset 0 -4px 3px #0007,0 4px 0 #122232,0 6px 5px #0008!important;
- text-shadow:-1px -1px 0 #132334,1px -1px 0 #132334,-1px 1px 0 #132334,1px 1px 0 #132334,0 2px 2px #000;
- font-weight:800;overflow:hidden;
+ background:var(--mould-panel) center/100% 100% no-repeat!important;
+ color:#fff!important;border:0!important;border-radius:12px;
+ box-shadow:none!important;filter:drop-shadow(0 4px 0 #102332) drop-shadow(0 5px 3px #0006);
+ text-shadow:-1px -1px 0 #071a2d,1px -1px 0 #071a2d,-1px 1px 0 #071a2d,1px 1px 0 #071a2d,0 2px 1px #000;
+ -webkit-text-stroke:.5px #071a2d;paint-order:stroke fill;font-weight:900;overflow:visible;
+ box-sizing:border-box!important;padding:0 3px 0 15px!important;
 }
 #player #padarea.ball-buttons .ball-round{
- border-radius:50%;background:radial-gradient(ellipse at 27% 15%,#fff 0%,#ffffffa0 5%,transparent 19%,transparent 47%,#0009 100%),var(--ball-art) center/100% 100% no-repeat!important;
+ border-radius:50%;background:var(--mould-orb) center/100% 100% no-repeat!important;padding:0 0 16px 0!important;
+ filter:drop-shadow(0 2px 0 #102332) drop-shadow(0 4px 3px #0005);
 }
-#player #padarea.ball-buttons .ball-button.held,#player #padarea.ball-buttons .ball-button:active{filter:brightness(.84);box-shadow:inset 0 3px 6px #0009,0 1px 0 #122232!important}
+#player #padarea.ball-buttons .ball-capture{background:var(--mould-capture) center/100% 100% no-repeat!important;padding:0!important;font-size:0!important}
+#player #padarea.ball-buttons .ball-button.held,#player #padarea.ball-buttons .ball-button:active{filter:brightness(.84) drop-shadow(0 1px 0 #122232)}
 #player #padarea.ball-buttons .ball-button.turbo-on,#player #padarea.ball-buttons .ball-button.rapid-on{outline:2px solid #73ffaf;outline-offset:2px}
 #player #padarea.ball-buttons .ball-button.rapid-armed{outline:2px solid #ffbc51;outline-offset:2px}
-#player #padarea.ball-buttons .ball-direction{filter:drop-shadow(0 4px 0 #122232) drop-shadow(0 3px 3px #0007)}
-#player #padarea.ball-buttons .ball-direction::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,#fff9,transparent 22%,#0008),var(--ball-panel) center/100% 100%;clip-path:polygon(33% 0,67% 0,67% 33%,100% 33%,100% 67%,67% 67%,67% 100%,33% 100%,33% 67%,0 67%,0 33%,33% 33%);box-shadow:inset 0 0 0 3px var(--ball-edge)}
+#player #padarea.ball-buttons .ball-direction{background:transparent!important;filter:drop-shadow(0 4px 0 #102332) drop-shadow(0 4px 3px #0006)}
+#player #padarea.ball-buttons .ball-direction::before{content:'';position:absolute;inset:0;pointer-events:none;background:var(--mould-cross) center/100% 100% no-repeat!important;clip-path:none!important;border:0!important;border-radius:0;box-shadow:none!important}
 #player #padarea.ball-buttons .dpad>button,#player #padarea.ball-buttons .dpad>.center{background:transparent!important;box-shadow:none!important;border:0!important;color:#fff!important}
 #player #padarea.ball-buttons .direction-arm{background:transparent!important;border:0!important;box-shadow:none!important}
-#player #padarea.ball-buttons .direction-arm::after{background:#fff;filter:drop-shadow(0 1px 1px #000)}
-#player #padarea.ball-buttons .stick-control{background:linear-gradient(145deg,#fff9,transparent 50%,#0008),var(--ball-art) center/100% 100%!important;border:2px solid var(--ball-edge)!important}
+#player #padarea.ball-buttons .direction-arm::after{background:#f4f8ff;filter:drop-shadow(0 1px 1px #00172d)}
+#player #padarea.ball-buttons .stick-control{background:var(--mould-capture) center/100% 100% no-repeat!important;border:0!important}
 #player #padarea.ball-buttons .stick-control::before{display:none}
