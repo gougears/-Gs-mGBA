@@ -15,3 +15,11 @@
 #padarea:is(.sculpted-skin,.photo-skin) .direction-arm.down::after{transform:translate(-50%,-50%) rotate(180deg)}
 #padarea:is(.sculpted-skin,.photo-skin) .direction-arm.left::after{transform:translate(-50%,-50%) rotate(-90deg)}
 #padarea:is(.sculpted-skin,.photo-skin) .direction-arm.right::after{transform:translate(-50%,-50%) rotate(90deg)}
+#player #padarea.photo-skin{background-position:var(--photo-position,50% 50%)!important;background-size:var(--photo-size,cover)!important}
+#photo-live-controls{padding-top:8px;max-height:28vh;overflow:auto}#photo-live-controls[hidden]{display:none}#photo-live-controls summary{cursor:pointer;font-weight:700}#photo-live-controls label{display:block;font-size:12px;margin:6px 0}#photo-live-controls input{display:block;width:100%;height:22px}
+.controls-subtabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}.controls-subtabs button{flex:1;min-width:65px;padding:8px 5px!important;font-size:12px!important}.controls-subtabs button[aria-selected=true]{background:#26364b!important;color:white!important}.controls-subpage[hidden]{display:none!important}
+/* Match every part of the photo-skin direction control to the chosen colours. */
+#player #padarea.photo-skin .direction-arm::after{background:var(--photo-text)!important}
+#player #padarea.photo-skin .dpad .center{background:linear-gradient(145deg,#ffffff50,transparent 45%,#0006),var(--photo-button)!important}
+#player #padarea.photo-skin .stick-control{background:radial-gradient(circle at 35% 25%,#ffffff60,transparent 55%,#0008),var(--photo-button)!important;border-color:var(--photo-text)!important}
+#player #padarea.photo-skin .stick-knob{background:var(--photo-text)!important}
