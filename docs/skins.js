@@ -50,7 +50,7 @@ case 'dream':return path('M0 65Q40 5 80 65T160 65T240 65T320 65V125H0Z','#9959a7
 case 'net':return Array.from({length:9},(_,i)=>path(`M${i*50-160} 0l135 135M${i*50} 0l-135 135`,'#253f4e',5)).join('');
 case 'nest':return [0,1,2].map(i=>path(`M${i*48-55} 0Q${i*48+80} 55 ${i*48+20} 130M${375-i*48} 0Q${240-i*48} 55 ${300-i*48} 130`,'#e3cb72',18)).join('');
 case 'repeat':return [55,160,265].map(x=>circle(x,55,32,'#f1cd46')+circle(x,55,17,'#39404a')).join('');
-case 'timer':return path('M0 0H320V32H0Z','#303944')+path('M135 0H185V95H135Z','#db5747')+path('M10 65L80 110M310 65L240 110','#343d48',18);
+case 'timer':return path('M0 0H320V48Q240 68 160 55Q80 68 0 48Z','#383b3e')+path('M132 0H188L175 59Q160 79 145 59Z','#ed5038')+path('M0 48L27 58 65 113H29L0 83Z M320 48L293 58 255 113H291L320 83Z','#ed5038')+path('M0 128H25L47 188 22 174 0 144Z M320 128H295L273 188 298 174 320 144Z','#ed5038');
 case 'premier':return path('M0 117H320','#dc514d',9);
 case 'dusk':return path('M25 0L95 0 120 40 95 95 25 95 0 40ZM225 0H295L320 40 295 95H225L200 40Z','#72ab4e')+circle(160,60,24,'#e5863d');
 case 'heal':return path('M130 0H190V120H130Z','#d5b2da')+path('M0 70H320','#f3d58d',20);

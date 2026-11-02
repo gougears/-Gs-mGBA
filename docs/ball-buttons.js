@@ -47,6 +47,10 @@
   if(!map[key])throw new Error('Missing ball emblem: '+key);
   return map[key];
  }
+ // Match ink to each material, with separate choices for the patterned A/B faces.
+ const luminance=hex=>{const c=hex.slice(1).match(/../g).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2];};
+ const inkFor=color=>luminance(color)>.32?{ink:'#102131',outline:'#fffdf1'}:{ink:'#ffffff',outline:'#102131'};
+ const orbLight=new Set(['SafariBall','HeavyBall','DreamBall','NestBall','RepeatBall','TimerBall','PremierBall','HealBall','StrangeBall','FeatherBall','JetBall','GoldBall']);
  const materials=new Map();
  function material(key,t){
   if(materials.has(key))return materials.get(key);
@@ -94,7 +98,9 @@
   area.querySelectorAll('.ball-button,.ball-round,.ball-direction').forEach(e=>e.classList.remove('ball-button','ball-round','ball-direction'));
   area.querySelectorAll('.ball-shell-art,.ball-shell-sheen').forEach(e=>e.remove());
   if(style!=='ball'||!t)return;
-  const m=material(key,t);for(const [k,v] of Object.entries(m).filter(([k])=>!['ground','seam'].includes(k)))area.style.setProperty('--mould-'+k,'url("'+v+'")');
+  const m=material(key,t),panelInk=inkFor(t.color),orbInk=orbLight.has(key)?inkFor('#f5f1df'):inkFor('#172737');
+  for(const [part,colors] of [['label',panelInk],['arrow',panelInk],['orb-label',orbInk]]){area.style.setProperty('--ball-'+part,colors.ink);area.style.setProperty('--ball-'+part+'-outline',colors.outline);}
+  for(const [k,v] of Object.entries(m).filter(([k])=>!['ground','seam'].includes(k)))area.style.setProperty('--mould-'+k,'url("'+v+'")');
   const shell=document.createElement('div');shell.className='ball-shell-art';
   shell.style.backgroundColor=m.ground;
   shell.style.backgroundImage='url("'+(area.classList.contains('skin-mode')&&!landscapeSkin()?m.portrait:m.backdrop)+'")';
