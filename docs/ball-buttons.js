@@ -81,7 +81,14 @@
   const doc=new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg">'+raw+'</svg>','image/svg+xml');
   for(const e of doc.querySelectorAll('circle'))if(e.getAttribute('cx')==='160')e.remove();
   for(const e of doc.querySelectorAll('g'))if((e.getAttribute('transform')||'').startsWith('translate(160 118)'))e.remove();
-  const clean=doc.documentElement.innerHTML;
+  // A shallow raised edge follows the existing painted motifs without changing their shape.
+  for(const e of doc.querySelectorAll('path')){
+   if(e.getAttribute('fill')!=='none'&&!e.hasAttribute('stroke'))e.setAttribute('filter','url(#shell-relief)');
+  }
+  const relief='<defs><filter id="shell-relief" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="1.1" stdDeviation=".6" flood-color="#07121d" flood-opacity=".38"/><feDropShadow dx="0" dy="-.7" stdDeviation=".35" flood-color="#ffffff" flood-opacity=".45"/></filter></defs>';
+  const seamLine=centreGroup?'M0 112Q160 128 320 112':'M0 118H320';
+  const seamEdge=`<path d="${seamLine}" transform="translate(0 -5)" fill="none" stroke="#ffffff" stroke-opacity=".42" stroke-width="1.4"/><path d="${seamLine}" transform="translate(0 6)" fill="none" stroke="#07121d" stroke-opacity=".32" stroke-width="2"/>`;
+  const clean=relief+doc.documentElement.innerHTML+seamEdge;
   const ground=doc.querySelector('rect')?.getAttribute('fill')||CELIO_SKINS[key].bodyColor||'#f2f0ed';
   const header=({PokeBall:'#532933',GreatBall:'#203653',UltraBall:'#282a2b',QuickBall:'#203e59',DiveBall:'#194658',LuxuryBall:'#29272b'})[key];
   const offset=header?83:66,seam=offset+118;
@@ -105,7 +112,8 @@
   shell.style.backgroundColor=m.ground;
   shell.style.backgroundImage='url("'+(area.classList.contains('skin-mode')&&!landscapeSkin()?m.portrait:m.backdrop)+'")';
   shell.style.backgroundSize=landscapeSkin()?'100% 100%':'100% auto';area.prepend(shell);
-  const sheen=document.createElement('div');sheen.className='ball-shell-sheen';area.append(sheen);
+  const sheen=document.createElement('div');sheen.className='ball-shell-sheen';
+  sheen.dataset.finish=['LuxuryBall','GoldBall','HeavyBall','HisuiHeavyBall','LeadenBall','GigatonBall','UltraBall','HisuiUltraBall'].includes(key)?'metal':'resin';shell.after(sheen);
   area.style.setProperty('--ball-color' ,t.color);area.style.setProperty('--ball-edge',t.edge);area.style.setProperty('--ball-art','url("'+t.art+'")');area.style.setProperty('--ball-panel','url("'+t.panel+'")');
   for(const b of area.querySelectorAll('button.skin-hit,.padgroup button')){
    if(b.classList.contains('direction-arm')||b.closest('.dpad'))continue;
