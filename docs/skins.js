@@ -127,7 +127,7 @@ for(const v of buttonVariants){const base=CELIO_SKINS[v[0]];if(!base)continue;
 
 // Spacious landscape controls; artwork and hit targets share these frames.
 (()=>{
- const positions={l:[20,10,136,46],r:[656,10,136,46],menu:[34,74,108,36],toggleFastForward:[670,74,108,36],select:[20,316,136,48],start:[656,316,136,48],quickSave:[190,324,104,44],quickLoad:[510,324,104,44],rapidFire:[378,324,116,44],'a+b':[686,260,106,44]};
+ const positions={l:[20,10,136,46],r:[656,10,136,46],menu:[34,74,108,36],toggleFastForward:[670,74,108,36],select:[20,312,148,52],start:[644,312,148,52],quickSave:[190,324,104,44],quickLoad:[510,324,104,44],rapidFire:[378,324,116,44],'a+b':[686,260,106,44]};
  const labels={menu:'MENU',toggleFastForward:'TURBO OFF',select:'SELECT',start:'START',quickSave:'Q.SAVE',quickLoad:'Q.LOAD',rapidFire:'連射 OFF'};
  for(const base of Object.values(CELIO_SKINS)){
   if(!base.landscape||base.delta)continue;

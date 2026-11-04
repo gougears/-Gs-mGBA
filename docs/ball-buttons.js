@@ -111,7 +111,20 @@
   const shell=document.createElement('div');shell.className='ball-shell-art';
   shell.style.backgroundColor=m.ground;
   shell.style.backgroundImage='url("'+(area.classList.contains('skin-mode')&&!landscapeSkin()?m.portrait:m.backdrop)+'")';
-  shell.style.backgroundSize=landscapeSkin()?'100% 100%':'100% auto';area.prepend(shell);
+  shell.style.backgroundSize=landscapeSkin()?'100% 100%':'100% auto';
+  // Beast Ball has markings on both halves: extend the lower half to the pad's bottom,
+  // keeping the upper artwork, seam and capture target at their existing positions.
+  if(key==='BeastBall'&&!landscapeSkin()){
+   const standard=area.classList.contains('skin-mode'),source=standard?m.portrait:m.backdrop;
+   const sourceHeight=standard?306:240,split=(standard?m.seam:118)+8;
+   const height=standard?portraitSkinHeight:320*area.clientHeight/Math.max(1,area.clientWidth);
+   if(height>sourceHeight){
+    const picture=`<image href="${source}" width="320" height="${sourceHeight}"/>`;
+    const full=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 ${height}" preserveAspectRatio="none"><svg width="320" height="${split}" viewBox="0 0 320 ${split}" overflow="hidden">${picture}</svg><svg y="${split}" width="320" height="${height-split}" viewBox="0 ${split} 320 ${sourceHeight-split}" preserveAspectRatio="none" overflow="hidden">${picture}</svg></svg>`;
+    shell.style.backgroundImage='url("data:image/svg+xml;charset=utf-8,'+encodeURIComponent(full)+'")';shell.style.backgroundSize='100% 100%';
+   }
+  }
+  area.prepend(shell);
   const sheen=document.createElement('div');sheen.className='ball-shell-sheen';
   sheen.dataset.finish=['LuxuryBall','GoldBall','HeavyBall','HisuiHeavyBall','LeadenBall','GigatonBall','UltraBall','HisuiUltraBall'].includes(key)?'metal':'resin';shell.after(sheen);
   area.style.setProperty('--ball-color' ,t.color);area.style.setProperty('--ball-edge',t.edge);area.style.setProperty('--ball-art','url("'+t.art+'")');area.style.setProperty('--ball-panel','url("'+t.panel+'")');
