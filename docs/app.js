@@ -98,8 +98,9 @@ async function audioStart(force=false){
    try{if(navigator.audioSession)navigator.audioSession.type=settings.soundOutput==='exclusive'?'playback':'ambient';}catch{}
    audio=new(window.AudioContext||window.webkitAudioContext)({latencyHint:settings.audioMode==='recording'?'playback':'interactive'});
    gain=audio.createGain();gain.connect(audio.destination);
-   const owner=audio;owner.onstatechange=()=>{if(owner!==audio)return;if(owner.state==='interrupted'){audioNeedsRebuild=true;flushAudio();}audioLabel();};
+   const owner=audio;owner.onstatechange=()=>{if(owner!==audio)return;if(owner.state==='interrupted'||owner.state==='suspended'){audioNeedsRebuild=true;flushAudio();}audioLabel();};
   }
+  try{if(navigator.audioSession)navigator.audioSession.type=settings.soundOutput==='exclusive'?'playback':'ambient';}catch{}
   current=audio;
   clearTimeout(audioRetryTimer);audioRetryTimer=setTimeout(()=>{if(audio===current&&current.state!=='running'&&!document.hidden){audioNeedsRebuild=true;gameNotice('音声を再開するにはゲーム画面をタップしてください');}},800);
   if(current.state!=='running'){await current.resume();if(current!==audio)return;nextSound=0;}
@@ -107,6 +108,8 @@ async function audioStart(force=false){
   if(current.state!=='running')audioLabel('ゲーム画面をタップすると音声を再開します。');
  }catch(e){if(!current||current===audio)audioLabel('音声を開始できません：'+e.message);}
 }
+let audioClockOwner=null,audioClockTime=0,audioClockWall=0;
+setInterval(()=>{const now=performance.now();if(settings.soundOutput!=='mix'||document.hidden||!loaded||paused||!audio){audioClockOwner=null;return;}if(audio===audioClockOwner&&audio.state==='running'&&now-audioClockWall>=900&&audio.currentTime===audioClockTime){audioNeedsRebuild=true;audioLabel('音声が中断されています。iPhoneの消音モードを解除し、ゲーム画面をタップしてください。');}audioClockOwner=audio;audioClockTime=audio.currentTime;audioClockWall=now;},1000);
 function scheduleAudioTime(now,duration){
  const lead=settings.audioMode==='recording'?.08:.025;
  if(nextSound>now+lead+.16)return null;
@@ -134,7 +137,7 @@ $('secondrom').onchange=async e=>{const file=e.target.files[0];e.target.value=''
 
 $('pauseoverlay').onclick=()=>{if(!loaded||!paused||busy||!$('settingspanel').hidden)return;pause(false);};
 function toggleTurbo(){if(link?.active)return gameNotice('通信中は1倍速で動作します。');setSpeed(speed===1?settings.turbo:1);}
-$('soundoutput').onchange=e=>{settings.soundOutput=['mix','off','exclusive'].includes(e.target.value)?e.target.value:'mix';remember();audioNeedsRebuild=true;audioStart();};
+$('soundoutput').onchange=e=>{settings.soundOutput=['mix','off','exclusive'].includes(e.target.value)?e.target.value:'mix';remember();syncMediaAudio();audioNeedsRebuild=true;audioStart();};
 $('audiomode').onchange=e=>{settings.audioMode=e.target.value==='lowlatency'?'lowlatency':'recording';remember();audioNeedsRebuild=true;audioStart();};
 $('soundtest').onclick=()=>{if(settings.volume===0){settings.volume=80;syncSettings();remember();}audioStart(true);};
 function closeSavePanel(){pendingSave=null;exportFile=null;if(exportURL)URL.revokeObjectURL(exportURL);exportURL=null;$('savepanel').hidden=true;$('applysave').hidden=true;$('applysave').disabled=false;}
@@ -380,13 +383,16 @@ $('netcreate').onclick=netStart;$('netstop').onclick=()=>link?.disconnect();
 function backgroundAudio(){if(recordingSession)stopGameRecording('画面を切り替えたため録画を終了しました。');audioNeedsRebuild=true;flushAudio();clearTimeout(audioRetryTimer);if(loaded)pause(true);}
 function foregroundAudio(){
  last=0;acc=0;requestWakeLock();
- if(loaded&&!paused)audioStart();
+ if(settings.soundOutput==='mix'&&loaded)audioStart();else if(loaded&&!paused)audioStart();
 }
-try{if(navigator.mediaSession){
+function syncMediaAudio(){try{if(navigator.mediaSession){
+ if(settings.soundOutput!=='exclusive'){navigator.mediaSession.metadata=null;for(const action of ['play','pause'])navigator.mediaSession.setActionHandler(action,null);return;}
  if(window.MediaMetadata)navigator.mediaSession.metadata=new MediaMetadata({title:'mGBA Celio · ゲーム音声',artist:'Pocket'});
  navigator.mediaSession.setActionHandler('play',()=>{if(loaded){pause(false);audioStart(true);}});
  navigator.mediaSession.setActionHandler('pause',()=>{if(loaded)pause(true);});
-}}catch{}
+}}catch{}}
+syncMediaAudio();
+addEventListener('focus',foregroundAudio);
  document.addEventListener('visibilitychange',()=>{if(document.hidden)backgroundAudio();else foregroundAudio();});
  addEventListener('pagehide',()=>{backgroundAudio();link?.disconnect();persistBoth();clearKeys();});
  addEventListener('pageshow',e=>{if(e.persisted){audioNeedsRebuild=true;flushAudio();foregroundAudio();}});setInterval(()=>{if(!busy)persistBoth();},3000);
