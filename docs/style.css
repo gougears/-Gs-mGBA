@@ -126,12 +126,19 @@ main#player.landscape-skin{position:relative;display:block;padding:0;max-width:n
 #settingspanel.controller-settings .pad-map-row:has(.pad-focus){background:#e4f8f5;border-color:#158697;box-shadow:inset 4px 0 #158697}
 #settingspanel.controller-settings .field:has(.pad-focus){background:#e4f8f5;border-radius:10px}
 #settingspanel.controller-settings .pad-map-row>span{font-size:14px;font-weight:750;line-height:1.5}
+/* Landscape settings use the same sidebar with touch or an external pad. */
 @media(orientation:landscape){
- #settingspanel.controller-settings{grid-template-columns:190px minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
- #settingspanel.controller-settings .settings-navigation{border-bottom:0;border-right:2px solid #26364b;padding-bottom:16px}
- #settingspanel.controller-settings .settings-tabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
- #settingspanel.controller-settings .settings-tabs button{min-height:46px}
- #settingspanel.controller-settings #settingscontent{padding:20px 24px 40px}
+ #settingspanel.settings-sheet{display:grid;grid-template-columns:clamp(140px,20vw,170px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);overflow:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);height:100svh;height:100dvh;box-sizing:border-box}
+ #settingspanel.settings-sheet[hidden]{display:none!important}
+ #settingspanel.settings-sheet .settings-navigation{position:relative;top:auto;min-height:0;min-width:0;margin:0;padding:0 12px 16px;background:#eef2ec;box-shadow:none;border-bottom:0;border-right:2px solid #26364b;overflow:auto;overscroll-behavior:contain}
+ #settingspanel.settings-sheet .settings-head{margin:0 -12px 10px;padding:8px 12px;min-height:50px;border-bottom-width:3px;gap:8px}
+ #settingspanel.settings-sheet .settings-head h2{font-size:17px;gap:0}
+ #settingspanel.settings-sheet .settings-head h2::before{display:none}
+ #settingspanel.settings-sheet .settings-head button{min-width:60px;min-height:36px;padding:5px 8px}
+ #settingspanel.settings-sheet .settings-tabs{grid-template-columns:minmax(0,1fr);gap:4px}
+ #settingspanel.settings-sheet .settings-tabs button{min-height:32px;height:clamp(32px,calc((100dvh - 110px)/8),44px);padding:4px 12px;text-align:left;font-size:13px}
+ #settingspanel.settings-sheet #settingscontent{min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:20px 24px 40px;scroll-padding:20px;overscroll-behavior:contain;scrollbar-gutter:stable;-webkit-overflow-scrolling:touch}
+ #settingspanel.settings-sheet .settings-page{max-width:760px;margin:0 auto;padding-bottom:20px}
 }
 
 #shotdismiss{position:fixed;left:calc(135px + env(safe-area-inset-left));top:calc(10px + env(safe-area-inset-top));z-index:45;min-width:44px;height:44px;padding:0;font-size:24px;background:#263d61ee}#shotdismiss[hidden]{display:none!important}
