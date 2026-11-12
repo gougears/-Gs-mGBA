@@ -150,3 +150,13 @@ main#player.landscape-skin{position:relative;display:block;padding:0;max-width:n
 /* Build 38: free layout uses the available controller surface, with uniform controls. */
 @media(orientation:portrait){#player #padarea:not(.skin-mode){max-width:none;min-height:0;border-radius:12px 12px 0 0}}
 #layoutpreview button{min-height:0;min-width:0;margin:0;box-sizing:border-box}
+
+/* External pads use the viewport, never the selected skin's artwork geometry. */
+main#player.external-display{position:fixed!important;inset:0!important;top:0!important;left:0!important;width:100%!important;height:100dvh!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;transform:none!important;aspect-ratio:auto!important;display:block!important;background:#000;overflow:hidden}
+#player.external-display .playbar,#player.external-display #padarea{display:none!important}
+#player.external-display .game-stage{position:absolute!important;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)!important;width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;aspect-ratio:auto!important;transform:none!important;margin:0!important;container-type:normal!important}
+#player.external-display .game-frame{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;border:0!important;border-radius:0!important;background:#000}
+#player.external-display #screen{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;transform:none;transform-origin:center}
+#player.external-display[data-external-scale="90"] #screen{transform:scale(.9)}
+#player.external-display[data-external-scale="80"] #screen{transform:scale(.8)}
+#player.external-display[data-external-scale="70"] #screen{transform:scale(.7)}

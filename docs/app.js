@@ -33,8 +33,8 @@ function compatibleROM(bytes){
 
 const $=id=>document.getElementById(id),ctx=$('screen').getContext('2d',{alpha:false}),image=ctx.createImageData(240,160);
 const tell=s=>{$('status').textContent=s;$('startupstatus').textContent=s;};
-const defaults={rapidMode:'auto',rapidRate:8,audioMode:'recording',soundOutput:'mix',externalScale:100,skin:'PokeBall',direction:'dpad',quickSlot:0,rememberROM:true,keepAwake:true,volume:80,turbo:2,scale:100,layout:'standard',positions:{dpad:[0,30],a:[100,25],b:[72,44],capture:[50,20],l:[0,0],r:[100,0],select:[0,78],start:[100,78],home:[50,0],turbo:[50,100],rapid:[50,78],quickSave:[0,100],quickLoad:[100,100]}};
-let settings=JSON.parse(JSON.stringify(defaults));try{const s=JSON.parse(localStorage.getItem('celio-settings-v4')||'null');if(s){settings.buttonSizes={};for(const [k,v]of Object.entries(s.buttonSizes||{}))if(Object.hasOwn(defaults.positions,k)&&Number.isFinite(+v))settings.buttonSizes[k]=Math.min(200,Math.max(50,+v));settings.autoFit=s.autoFit!==false;settings.visibleButtons=s.visibleButtons&&typeof s.visibleButtons==='object'?s.visibleButtons:{};settings.gridSize=[8,16,24].includes(s.gridSize)?s.gridSize:16;if(s.positions?.ab&&!s.positions.a){s.positions.a=s.positions.ab;s.positions.b=[Math.max(0,s.positions.ab[0]-28),Math.min(100,s.positions.ab[1]+19)];}settings.rapidMode=s.rapidMode==='hold'?'hold':'auto';settings.rapidRate=[5,8,12].includes(s.rapidRate)?s.rapidRate:8;settings.soundOutput=['mix','off','exclusive'].includes(s.soundOutput)?s.soundOutput:'mix';settings.audioMode=s.audioMode==='lowlatency'?'lowlatency':'recording';settings.externalScale=[100,90,80,70].includes(s.externalScale)?s.externalScale:100;settings.keepAwake=s.keepAwake!==false;settings.rememberROM=s.rememberROM!==false;settings.direction=s.direction==='stick'?'stick':'dpad';settings.quickSlot=Number.isInteger(s.quickSlot)&&s.quickSlot>=0&&s.quickSlot<4?s.quickSlot:0;settings.skin=(s.skin==='custom'||CELIO_SKINS[s.skin])?s.skin:'PokeBall';settings.volume=Math.min(100,Math.max(0,Number(s.volume)||0));settings.turbo=[2,3,4].includes(s.turbo)?s.turbo:2;settings.scale=Math.min(115,Math.max(75,Number(s.scale)||100));settings.layout=['standard','left','compact'].includes(s.layout)?s.layout:'standard';if(s.positions?.menu&&!s.positions.select&&!s.positions.start){const [x,y]=s.positions.menu;for(const key of ['l','r'])if(s.positions[key]?.[1]===100&&s.positions[key]?.[0]===(key==='l'?0:100))s.positions[key]=[key==='l'?0:100,0];settings.positions.select=[Math.max(0,Number(x)-50),Math.min(78,Number(y))];settings.positions.start=[Math.min(100,Number(x)+50),Math.min(78,Number(y))];}for(const k of Object.keys(defaults.positions))if(Array.isArray(s.positions?.[k]))settings.positions[k]=s.positions[k].map(v=>Math.min(100,Math.max(0,Number(v)||0)));}}catch{}
+const defaults={rapidMode:'auto',rapidRate:8,audioMode:'recording',soundOutput:'mix',audioRoute:'media',externalScale:100,skin:'PokeBall',direction:'dpad',quickSlot:0,rememberROM:true,keepAwake:true,volume:80,turbo:2,scale:100,layout:'standard',positions:{dpad:[0,30],a:[100,25],b:[72,44],capture:[50,20],l:[0,0],r:[100,0],select:[0,78],start:[100,78],home:[50,0],turbo:[50,100],rapid:[50,78],quickSave:[0,100],quickLoad:[100,100]}};
+let settings=JSON.parse(JSON.stringify(defaults));try{const s=JSON.parse(localStorage.getItem('celio-settings-v4')||'null');if(s){settings.buttonSizes={};for(const [k,v]of Object.entries(s.buttonSizes||{}))if(Object.hasOwn(defaults.positions,k)&&Number.isFinite(+v))settings.buttonSizes[k]=Math.min(200,Math.max(50,+v));settings.autoFit=s.autoFit!==false;settings.visibleButtons=s.visibleButtons&&typeof s.visibleButtons==='object'?s.visibleButtons:{};settings.gridSize=[8,16,24].includes(s.gridSize)?s.gridSize:16;if(s.positions?.ab&&!s.positions.a){s.positions.a=s.positions.ab;s.positions.b=[Math.max(0,s.positions.ab[0]-28),Math.min(100,s.positions.ab[1]+19)];}settings.rapidMode=s.rapidMode==='hold'?'hold':'auto';settings.rapidRate=[5,8,12].includes(s.rapidRate)?s.rapidRate:8;settings.audioRoute=s.audioRoute==='direct'?'direct':'media';settings.soundOutput=['mix','off','exclusive'].includes(s.soundOutput)?s.soundOutput:'mix';settings.audioMode=s.audioMode==='lowlatency'?'lowlatency':'recording';settings.externalScale=[100,90,80,70].includes(s.externalScale)?s.externalScale:100;settings.keepAwake=s.keepAwake!==false;settings.rememberROM=s.rememberROM!==false;settings.direction=s.direction==='stick'?'stick':'dpad';settings.quickSlot=Number.isInteger(s.quickSlot)&&s.quickSlot>=0&&s.quickSlot<4?s.quickSlot:0;settings.skin=(s.skin==='custom'||CELIO_SKINS[s.skin])?s.skin:'PokeBall';settings.volume=Math.min(100,Math.max(0,Number(s.volume)||0));settings.turbo=[2,3,4].includes(s.turbo)?s.turbo:2;settings.scale=Math.min(115,Math.max(75,Number(s.scale)||100));settings.layout=['standard','left','compact'].includes(s.layout)?s.layout:'standard';if(s.positions?.menu&&!s.positions.select&&!s.positions.start){const [x,y]=s.positions.menu;for(const key of ['l','r'])if(s.positions[key]?.[1]===100&&s.positions[key]?.[0]===(key==='l'?0:100))s.positions[key]=[key==='l'?0:100,0];settings.positions.select=[Math.max(0,Number(x)-50),Math.min(78,Number(y))];settings.positions.start=[Math.min(100,Number(x)+50),Math.min(78,Number(y))];}for(const k of Object.keys(defaults.positions))if(Array.isArray(s.positions?.[k]))settings.positions[k]=s.positions[k].map(v=>Math.min(100,Math.max(0,Number(v)||0)));}}catch{}
 function remember(){try{localStorage.setItem('celio-settings-v4',JSON.stringify(settings));}catch{tell('設定を保存できません。今回のプレイには反映します。');}}
 let M,db,loaded=false,paused=false,busy=false,keys=0,speed=1,romKey='',romName='',quickNamespace='',audio,gain,muted=false,nextSound=0,last=0,acc=0,link=null;
 let audioNeedsRebuild=false,audioRetryTimer,startupStarted=false,startupRequested=false,startupReady=false,externalPadConnected=false;
@@ -82,9 +82,12 @@ function paint(){if(!loaded)return;const p=M._video();image.data.set(M.HEAPU8.su
 function audioLabel(message){$('audiostatus').textContent=message||(settings.soundOutput==='off'?'ゲーム音OFF · 他のアプリの音声を優先':('音量 '+settings.volume+'% · '+(audio?.state==='running'?'音声エンジン動作中':'「音声を開始・再開」を押してください。')));}
 function flushAudio(){for(const s of sounds){try{s.stop();s.disconnect();}catch{}}sounds.clear();nextSound=0;}
 function updateGain(){if(gain&&audio)gain.gain.setTargetAtTime(muted?0:settings.volume/100,audio.currentTime,.01);audioLabel();}
+let gameAudioElement=null,gameAudioStream=null,gameAudioPlay=null;
+function releaseAudioOutput(){const el=gameAudioElement,stream=gameAudioStream;gameAudioElement=null;gameAudioStream=null;gameAudioPlay=null;if(el){el.pause();el.srcObject=null;el.remove();}if(stream)for(const track of stream.getTracks())track.stop();}
+function playAudioOutput(){const el=gameAudioElement;if(!el||!el.paused)return Promise.resolve();if(gameAudioPlay)return gameAudioPlay;const job=el.play();gameAudioPlay=job;job.finally(()=>{if(gameAudioPlay===job)gameAudioPlay=null;}).catch(()=>{});return job;}
 function retireAudio(){
  if(recordingSession)stopGameRecording('音声の再接続のため録画を終了しました。');
- flushAudio();const old=audio;audio=null;gain=null;
+ releaseAudioOutput();flushAudio();const old=audio;audio=null;gain=null;
  if(old){old.onstatechange=null;try{old.close?.().catch(()=>{});}catch{}}
 }
 async function audioStart(force=false){
@@ -97,14 +100,21 @@ async function audioStart(force=false){
   if(!audio){
    try{if(navigator.audioSession)navigator.audioSession.type=settings.soundOutput==='exclusive'?'playback':'ambient';}catch{}
    audio=new(window.AudioContext||window.webkitAudioContext)({latencyHint:settings.audioMode==='recording'?'playback':'interactive'});
-   gain=audio.createGain();gain.connect(audio.destination);
+   gain=audio.createGain();
+   if(settings.soundOutput==='mix'&&settings.audioRoute==='media'){
+    const output=audio.createMediaStreamDestination();gain.connect(output);gameAudioStream=output.stream;
+    const el=document.createElement('audio');el.id='game-audio-output';el.setAttribute('playsinline','');el.hidden=true;el.srcObject=output.stream;document.body.append(el);gameAudioElement=el;
+   }else gain.connect(audio.destination);
    const owner=audio;owner.onstatechange=()=>{if(owner!==audio)return;if(owner.state==='interrupted'||owner.state==='suspended'){audioNeedsRebuild=true;flushAudio();}audioLabel();};
   }
   try{if(navigator.audioSession)navigator.audioSession.type=settings.soundOutput==='exclusive'?'playback':'ambient';}catch{}
   current=audio;
   clearTimeout(audioRetryTimer);audioRetryTimer=setTimeout(()=>{if(audio===current&&current.state!=='running'&&!document.hidden){audioNeedsRebuild=true;gameNotice('音声を再開するにはゲーム画面をタップしてください');}},800);
-  if(current.state!=='running'){await current.resume();if(current!==audio)return;nextSound=0;}
-  updateGain();
+  const restarting=current.state!=='running',resume=restarting?current.resume():Promise.resolve();
+  // Start both operations within the same tap; do not wait away user activation.
+  const playback=playAudioOutput();let deadline;
+  try{await Promise.race([Promise.all([resume,playback]),new Promise((_,reject)=>{deadline=setTimeout(()=>reject(Error('音声を開始できません。画面をタップするか、出力方式を切り替えてください。')),1800);})]);}finally{clearTimeout(deadline);}
+  if(current!==audio)return;if(restarting)nextSound=0;updateGain();
   if(current.state!=='running')audioLabel('ゲーム画面をタップすると音声を再開します。');
  }catch(e){if(!current||current===audio)audioLabel('音声を開始できません：'+e.message);}
 }
@@ -137,6 +147,7 @@ $('secondrom').onchange=async e=>{const file=e.target.files[0];e.target.value=''
 
 $('pauseoverlay').onclick=()=>{if(!loaded||!paused||busy||!$('settingspanel').hidden)return;pause(false);};
 function toggleTurbo(){if(link?.active)return gameNotice('通信中は1倍速で動作します。');setSpeed(speed===1?settings.turbo:1);}
+$('audioroute').onchange=e=>{settings.audioRoute=e.target.value==='direct'?'direct':'media';remember();audioNeedsRebuild=true;audioStart();};
 $('soundoutput').onchange=e=>{settings.soundOutput=['mix','off','exclusive'].includes(e.target.value)?e.target.value:'mix';remember();syncMediaAudio();audioNeedsRebuild=true;audioStart();};
 $('audiomode').onchange=e=>{settings.audioMode=e.target.value==='lowlatency'?'lowlatency':'recording';remember();audioNeedsRebuild=true;audioStart();};
 $('soundtest').onclick=()=>{if(settings.volume===0){settings.volume=80;syncSettings();remember();}audioStart(true);};
@@ -240,7 +251,7 @@ function bindDirection(b,stick=false){
  for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,e=>{if(pointer===e.pointerId)reset();});
  b.addEventListener('contextmenu',e=>e.preventDefault());
 }
-function externalDisplay(){return !window.gsLayoutEditing&&externalPadConnected&&!!window.matchMedia?.('(orientation: landscape)').matches;}
+function externalDisplay(){return !window.gsLayoutEditing&&externalPadConnected;}
 function updateExternalDisplay(){
  $('settingspanel').classList.toggle('controller-settings',externalPadConnected);
  const enabled=externalDisplay();$('player').classList.toggle('external-display',enabled);$('player').dataset.externalScale=String(settings.externalScale);
@@ -352,7 +363,7 @@ $('quicksaveopen').onclick=quickSaveSelected;$('quickloadopen').onclick=quickLoa
 function customPadScale(){const area=$('padarea');return Math.max(.1,Math.min(area.clientWidth/320,area.clientHeight/270))*settings.scale/100;}
 function applyPositions(){const area=$('padarea');if(!area.clientWidth||!area.clientHeight)return;const scale=settings.skin==='custom'?customPadScale():settings.scale/100;for(const group of document.querySelectorAll('.padgroup')){group.hidden=settings.skin==='custom'&&settings.visibleButtons?.[group.dataset.group]===false;const [x,y]=settings.positions[group.dataset.group];const ownScale=scale*(settings.skin==='custom'?(settings.buttonSizes?.[group.dataset.group]||100)/100:1),fit=Math.min(ownScale,area.clientWidth/group.offsetWidth,area.clientHeight/group.offsetHeight);const w=group.offsetWidth*fit,h=group.offsetHeight*fit;group.style.transform='scale('+fit+')';group.style.left=(Math.max(0,area.clientWidth-w)*x/100)+'px';group.style.top=(Math.max(0,area.clientHeight-h)*y/100)+'px';}renderLayoutPreview();}
 function syncPositionInputs(){const p=settings.positions[$('positiongroup').value];$('positionx').value=p[0];$('positiony').value=p[1];renderLayoutPreview();}
-function syncSettings(){$('soundoutput').value=settings.soundOutput;$('rapidmode').value=settings.rapidMode;$('rapidrate').value=settings.rapidRate;$('audiomode').value=settings.audioMode;$('externalscale').value=settings.externalScale;$('keepawake').checked=settings.keepAwake;$('rememberrom').checked=settings.rememberROM;$('directiontype').value=settings.direction;$('quickslot').value=settings.quickSlot;quickLabels();$('skinselect').value=settings.skin;window.refreshSkinGallery?.();$('volume').value=settings.volume;$('volumevalue').textContent=settings.volume+'%';$('speedsetting').value=settings.turbo;$('layout').value=settings.layout;$('buttonscale').value=settings.scale;$('scalevalue').textContent=settings.scale+'%';syncPositionInputs();applyPositions();updateGain();}
+function syncSettings(){$('audioroute').value=settings.audioRoute;$('soundoutput').value=settings.soundOutput;$('rapidmode').value=settings.rapidMode;$('rapidrate').value=settings.rapidRate;$('audiomode').value=settings.audioMode;$('externalscale').value=settings.externalScale;$('keepawake').checked=settings.keepAwake;$('rememberrom').checked=settings.rememberROM;$('directiontype').value=settings.direction;$('quickslot').value=settings.quickSlot;quickLabels();$('skinselect').value=settings.skin;window.refreshSkinGallery?.();$('volume').value=settings.volume;$('volumevalue').textContent=settings.volume+'%';$('speedsetting').value=settings.turbo;$('layout').value=settings.layout;$('buttonscale').value=settings.scale;$('scalevalue').textContent=settings.scale+'%';syncPositionInputs();applyPositions();updateGain();}
 function preset(name){settings.skin='custom';drawSkin();settings.layout=name;settings.positions=JSON.parse(JSON.stringify(defaults.positions));if(name==='left'){settings.positions.dpad=[100,23];settings.positions.a=[28,25];settings.positions.b=[0,44];}if(name==='compact'){settings.positions.dpad=[15,20];settings.positions.a=[90,25];settings.positions.b=[65,44];settings.scale=85;}syncSettings();remember();}
 $('netshortcut').onclick=()=>openPanel('netpanel');
 function closeTopSave(){ $('topsave-menu').hidden=true; $('topsave').focus({preventScroll:true}); }
