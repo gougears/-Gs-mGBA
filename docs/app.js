@@ -137,7 +137,8 @@ function updateTurboButton(button){
 }
 function syncTurboIndicator(){for(const button of document.querySelectorAll('.turbo-state'))updateTurboButton(button);updateTurboButton($('custom-turbo'));}
 function setSpeed(n){speed=n;last=0;acc=0;flushAudio();$('speedstatus').textContent='現在の速度：'+speed+'倍';updateGain();syncTurboIndicator();}
-function loop(t){requestAnimationFrame(loop);pollGamepad();const onlineHold=paused&&linkMode==='online'&&link?.active;if(!startupStarted||!loaded||(paused&&!onlineHold)||busy){last=t;return;}if(!last)last=t;acc+=Math.min(100,t-last);last=t;const dt=1000/59.7275;let count=0;try{while(acc>=dt&&count<6){for(let i=0;i<speed;i++){window.gsCheatsSync?.();M._frame(onlineHold?0:(window.gsMacro?.frame(rapidFrameKeys())??rapidFrameKeys()));consumeAudio();if(link?.active){link.pump();if(linkMode==='local'&&link.active){const peer=players[1-activePlayer].M;peer._frame(0);peer._audio_read();link.pump();}}}acc-=dt;count++;}if(count&&!onlineHold)paint();}catch(e){pause(true);tell('実行エラー：'+e.message);}}
+function loop(t){requestAnimationFrame(loop);if(document.hidden)return;pollGamepad();advanceGame(t);}
+function advanceGame(t){const onlineHold=paused&&linkMode==='online'&&link?.active;if(!startupStarted||!loaded||(paused&&!onlineHold)||busy){last=t;return;}if(!last)last=t;acc+=Math.min(100,t-last);last=t;const dt=1000/59.7275;let count=0;try{while(acc>=dt&&count<6){for(let i=0;i<speed;i++){window.gsCheatsSync?.();M._frame(onlineHold?0:(window.gsMacro?.frame(rapidFrameKeys())??rapidFrameKeys()));consumeAudio();if(link?.active){link.pump();if(linkMode==='local'&&link.active){const peer=players[1-activePlayer].M;peer._frame(0);peer._audio_read();link.pump();}}}acc-=dt;count++;}if(count&&!onlineHold)paint();}catch(e){pause(true);tell('実行エラー：'+e.message);}}
 function openPanel(id){if(id==='quickpanel'||id==='savepanel')selectSettingsTab('saves');if(id==='netpanel')selectSettingsTab('network');clearKeys();$('settingspanel').hidden=false;$(id).hidden=false;renderLayoutPreview();$(id).scrollIntoView({behavior:'smooth',block:'nearest'});if(externalPadConnected&&id==='settingspanel'){padNavZone='tabs';focusPadSetting($('tab-'+activeSettingsTab));}}
 function closeSettings(){cancelGameRestart();closePadChoices(false);clearPadFocus();$('settingspanel').hidden=true;clearKeys();applyPositions();if(loaded&&!paused)audioStart();}
 for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>{if(b.dataset.close==='settingspanel')closeSettings();else $(b.dataset.close).hidden=true;};
@@ -391,8 +392,22 @@ addEventListener('resize',()=>{drawSkin();applyPositions();});document.addEventL
 
 function netStart(){if(linkMode!=='local')return;capturePlayer();if(busy||players.some(p=>!p.loaded))return $('netstatus').textContent='プレイヤー1・2の両方にROMを開いてください。';closeSavePanel();cancelQuick();pause(false);link.start();}
 $('netcreate').onclick=netStart;$('netstop').onclick=()=>link?.disconnect();
+let backgroundLinkTimer=null;
+function stopBackgroundLink(){clearInterval(backgroundLinkTimer);backgroundLinkTimer=null;}
+function startBackgroundLink(){
+ stopBackgroundLink();
+ if(linkMode!=='online'||!link?.active)return;
+ last=0;acc=0;
+ // Best effort only: mobile operating systems can suspend all page execution.
+ backgroundLinkTimer=setInterval(()=>{
+  if(!document.hidden||linkMode!=='online'||!link?.active){stopBackgroundLink();return;}
+  advanceGame(performance.now());
+ },16);
+}
 function backgroundAudio(){if(recordingSession)stopGameRecording('画面を切り替えたため録画を終了しました。');audioNeedsRebuild=true;flushAudio();clearTimeout(audioRetryTimer);if(loaded)pause(true);}
 function foregroundAudio(){
+ if(document.hidden)return;
+ stopBackgroundLink();
  last=0;acc=0;requestWakeLock();
  if(settings.soundOutput==='mix'&&loaded)audioStart();else if(loaded&&!paused)audioStart();
 }
@@ -404,10 +419,10 @@ function syncMediaAudio(){try{if(navigator.mediaSession){
 }}catch{}}
 syncMediaAudio();
 addEventListener('focus',foregroundAudio);
- document.addEventListener('visibilitychange',()=>{if(document.hidden)backgroundAudio();else foregroundAudio();});
- addEventListener('pagehide',()=>{backgroundAudio();link?.disconnect();persistBoth();clearKeys();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){backgroundAudio();startBackgroundLink();}else foregroundAudio();});
+ addEventListener('pagehide',()=>{backgroundAudio();if(linkMode==='online')startBackgroundLink();else link?.disconnect();persistBoth();clearKeys();});
  addEventListener('pageshow',e=>{if(e.persisted){audioNeedsRebuild=true;flushAudio();foregroundAudio();}});setInterval(()=>{if(!busy)persistBoth();},3000);
-const linkHooks={session:state=>{onlineHeader=state;updateROMHeader();},status:s=>$('netstatus').textContent=s,active:on=>{if(on)window.gsMacro?.cancel();$('netstop').disabled=!on;$('netcreate').disabled=on;$('onlinecreate').disabled=on;$('onlinejoin').disabled=on;if(on)setSpeed(1);playerUI();if(!$('quickpanel').hidden)renderSlots();}};
+const linkHooks={session:state=>{onlineHeader=state;updateROMHeader();},status:s=>$('netstatus').textContent=s,active:on=>{if(!on)stopBackgroundLink();if(on)window.gsMacro?.cancel();$('netstop').disabled=!on;$('netcreate').disabled=on;$('onlinecreate').disabled=on;$('onlinejoin').disabled=on;if(on)setSpeed(1);playerUI();if(!$('quickpanel').hidden)renderSlots();}};
 $('linkmode').onchange=e=>{link?.disconnect();linkMode=e.target.value;link=linkMode==='local'?localLink:(M?createCelioLink(M,linkHooks):null);$('localoptions').hidden=linkMode!=='local';$('onlineoptions').hidden=linkMode!=='online';};
 function onlineStart(room){if(!loaded||busy||linkMode!=='online')return gameNotice('先にROMを読み込んでください。');closeSavePanel();cancelQuick();pause(false);link.start(room,$('netprotocol').value);}
 $('onlinecreate').onclick=()=>onlineStart('');$('onlinejoin').onclick=()=>onlineStart($('room').value.trim());

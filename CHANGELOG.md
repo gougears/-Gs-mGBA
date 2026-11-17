@@ -393,3 +393,8 @@ Run `node tests/local-link.cjs` and `node tests/ui.cjs` from the repository root
 - Online rooms default to the new 2-player/51-byte format, with PlayerSettings and partyReady support.
 - Legacy 32-word relay format remains selectable; local link and the core/save formats are unchanged.
 - Added offline protocol regression fixtures; live trade/battle interoperability is not yet verified.
+
+## 2026-11-17 — Background online link
+- Keep online sessions open on pagehide instead of explicitly leaving the room.
+- Advance the paused online core without input/rendering using a hidden-page timer when animation callbacks stop; stop the timer on return/disconnect.
+- OS/browser suspension and relay timeouts can still disconnect a background session. No automatic room rejoin during a trade.
