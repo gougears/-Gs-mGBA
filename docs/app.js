@@ -409,7 +409,7 @@ addEventListener('focus',foregroundAudio);
  addEventListener('pageshow',e=>{if(e.persisted){audioNeedsRebuild=true;flushAudio();foregroundAudio();}});setInterval(()=>{if(!busy)persistBoth();},3000);
 const linkHooks={session:state=>{onlineHeader=state;updateROMHeader();},status:s=>$('netstatus').textContent=s,active:on=>{if(on)window.gsMacro?.cancel();$('netstop').disabled=!on;$('netcreate').disabled=on;$('onlinecreate').disabled=on;$('onlinejoin').disabled=on;if(on)setSpeed(1);playerUI();if(!$('quickpanel').hidden)renderSlots();}};
 $('linkmode').onchange=e=>{link?.disconnect();linkMode=e.target.value;link=linkMode==='local'?localLink:(M?createCelioLink(M,linkHooks):null);$('localoptions').hidden=linkMode!=='local';$('onlineoptions').hidden=linkMode!=='online';};
-function onlineStart(room){if(!loaded||busy||linkMode!=='online')return gameNotice('先にROMを読み込んでください。');closeSavePanel();cancelQuick();pause(false);link.start(room);}
+function onlineStart(room){if(!loaded||busy||linkMode!=='online')return gameNotice('先にROMを読み込んでください。');closeSavePanel();cancelQuick();pause(false);link.start(room,$('netprotocol').value);}
 $('onlinecreate').onclick=()=>onlineStart('');$('onlinejoin').onclick=()=>onlineStart($('room').value.trim());
 $('netlogsave').onclick=async()=>{try{const stamp=new Date().toISOString().replace(/[:.]/g,'-');await saveFile(new File([celioDiagnostics.export()],'Gs-mGBA-link-'+stamp+'.json',{type:'application/json'}));$('netlogstatus').textContent='通信ログの保存メニューを開きました。';}catch(e){if(e.name!=='AbortError')$('netlogstatus').textContent='ログを保存できません：'+e.message;}};
 $('netlogclear').onclick=()=>{celioDiagnostics.clear();$('netlogstatus').textContent=celioDiagnostics.storageOK?'保存した通信ログを削除しました。':'端末の保存領域にアクセスできません。';};

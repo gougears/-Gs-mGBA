@@ -33,3 +33,27 @@ Validation: artificial 128 MiB ROM bank switching/state/reset, HGX4 raw4/raw8 re
 The browser accepts 16 MiB `.sav` files (also with the optional 16-byte RTC footer). The attached save was verified byte-for-byte after import/export, reset and quick-state restoration, including banks up to 255. The file itself is not included in this repository. Older 6 MiB saves remain supported. Upstream HGX4 updates include HGZ1 resources, scaled tiles, night palettes and bank-aware resource caching.
 
 rom128-2 validation: all 288 upstream HGX synthetic checks passed with zlib enabled, including HGZ1 decoding and malformed resource checks. Browser boot/audio/XRAM, 6 MiB saves and quick states also passed.
+
+## Online relay protocol: rom128-6 compatibility (2026-11-17)
+
+`docs/link.js` now defaults to the relay51 transport described in the supplied
+`mGBA_celio_edition-rom128-6.zip`, especially `src/platform/qt/CelioNet.cpp`
+(`emitData`, `drainIncoming`, `handleEvent`, `handleAck`) and the release notes.
+Archive SHA-256: `29c80d4091a1da4b5a8908b9ebf5fd4958c2edb126766eba20e91735a546cf5b`.
+The reference implementation is MPL-2.0, from pm-start/mGBA_celio_edition.
+
+This is a transport update, not a claim that the embedded core was upgraded to rom128-6.
+The existing core ABI and local two-player link are unchanged. New rooms explicitly
+request 2 players. Each relay packet has three 17-byte commands: seat byte followed
+by eight little-endian 16-bit words. The 32-word core output is split into 24+8 words,
+with zero idle commands padding the second relay packet. Incoming packets are filtered
+by seat and padded to the core's fixed 32-word ABI. No fourth command is discarded.
+PlayerSettings maps seat 0 to the old slave-device role and seat 1 to the old master-device
+role. Seat 0 does not receive ConnectLink, matching upstream. partyReady is accepted even
+when it precedes the room ACK; duplicate commands/data are ignored and ACKed.
+Rooms with a player count other than 2 are refused. Legacy32 remains selectable.
+USB serial/direct hardware and four-player emulation are not added by this change.
+
+Run `node tests/link-relay.cjs` for offline transport fixtures covering both roles,
+room creation, early readiness, ACKs, packet conversion, ordering, duplicates, and
+invalid input. Real PC/browser exchange and real GBA hardware remain unverified.

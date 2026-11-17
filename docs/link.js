@@ -6,10 +6,10 @@ const celioDiagnostics=(()=>{
  let live=null,storageOK=true;
  function save(){try{localStorage.setItem(key,JSON.stringify(history));storageOK=true;}catch{storageOK=false;}}
  return {
-  begin(role){live={build:'net53',started:new Date().toISOString(),role,events:[],sent:0,received:0};return live;},
+  begin(role){live={build:'net54-rom128-6',started:new Date().toISOString(),role,events:[],sent:0,received:0};return live;},
   event(log,kind,detail={}){if(!log||log.ended)return;log.events.push({at:new Date().toISOString(),kind,...detail});if(log.events.length>160)log.events.shift();},
   finish(log,reason,error){if(!log||log.ended)return;log.ended=new Date().toISOString();log.reason=reason;log.error=error;history.push(log);history=history.slice(-5);save();},
-  export(){return JSON.stringify({format:1,build:'net53',storageOK,history,active:live&&!live.ended?live:null},null,2);},
+  export(){return JSON.stringify({format:1,build:'net54-rom128-6',storageOK,history,active:live&&!live.ended?live:null},null,2);},
   clear(){history=[];if(live?.ended)live=null;save();},
   get storageOK(){return storageOK;}
  };
@@ -18,6 +18,7 @@ function createCelioLink(M,hooks){
  const endpoint='wss://celio-server.up.railway.app/socket.io/?EIO=4&transport=websocket';
  const commands=new Set([0,1,0x10,0x11,0x12,0x13,0xff0a]);
  const words=d=>Array.isArray(d)&&d.length===32&&d.every(n=>Number.isInteger(n)&&n>=0&&n<=65535);
+ let protocol='relay51',seat=null;const earlyEvents=[];
  let ws=null,active=false,inSession=false,joined=false,deviceStarted=false,batched=false;
  let sequence=0,expected=0,nextAck=1,timer=null,startTimer=null,lastReceive=0,pingLimit=30000,lastTick=0,resumeUntil=0,lastPing=0,lastPong=0,log=null,gameClosed=false;
  let queued=0,scheduled=false;
@@ -32,7 +33,7 @@ function createCelioLink(M,hooks){
   clearInterval(timer);clearTimeout(startTimer);timer=startTimer=null;
   for(const req of inFlight.values())clearTimeout(req.timer);inFlight.clear();outgoing.length=0;queued=0;scheduled=false;
   if(ws){const old=ws;ws=null;old.onclose=old.onmessage=old.onerror=null;try{if(old.readyState===1)old.send('42["sessionLeft"]');old.close();}catch{}}
-  if(active)M._link_disable();active=inSession=deviceStarted=false;buffered.clear();seen.clear();
+  if(active)M._link_disable();active=inSession=deviceStarted=false;seat=null;earlyEvents.length=0;buffered.clear();seen.clear();
   note('end',{reason:message,error});celioDiagnostics.finish(log,message,error);
   roomCode='';displaySession(null);hooks.active(false);report(message+(error?(celioDiagnostics.storageOK?' 通信ログを記録しました。':' 通信ログはメモリ内にあります。閉じる前に保存してください。'):''));
  }
@@ -63,15 +64,24 @@ function createCelioLink(M,hooks){
  function acknowledge(id){if(id!==null)wire('43'+id+'[true]');}
  function modern(){if(!batched){batched=true;note('protocol',{mode:'batched-ack'});}}
  function deliver(data){
+  if(protocol==='relay51'){
+   if(seat===null)throw Error('席番号を受信する前に通信データが届きました');
+   const decoded=[];
+   for(let offset=0;offset<51;offset+=17){if(data[offset]===seat||data[offset]>=2)continue;for(let i=offset+1;i<offset+17;i+=2)decoded.push(data[i]|(data[i+1]<<8));}
+   if(!decoded.length)return;
+   // The existing core accepts four 8-word commands. Zero commands are idle cycles.
+   data=decoded.concat(Array(32-decoded.length).fill(0));
+  }
+
   const p=M._malloc(64);if(!p)throw Error('通信メモリ不足');
   try{M.HEAPU16.set(data,p/2);if(!M._link_receive(p,32))throw Error('通信バッファがいっぱいです');}finally{M._free(p);}
   if(log)log.received++;
  }
  function event(name,payload,id){
-  if(!inSession)throw Error('部屋への参加前に通信を受信しました');
+  if(!inSession){if(earlyEvents.length>=64)throw Error('部屋の応答前に通信が多すぎます');earlyEvents.push([name,payload,id]);return;}
   if(name==='deviceData'){
    const packets=Array.isArray(payload)?payload:[payload];
-   if(!packets.length||packets.length>1024||!packets.every(p=>p&&Number.isSafeInteger(p.sequence)&&p.sequence>=0&&p.sequence<Number.MAX_SAFE_INTEGER&&words(p.data)))throw Error('通信データの形式が違います');
+   if(!packets.length||packets.length>1024||!packets.every(p=>p&&Number.isSafeInteger(p.sequence)&&p.sequence>=0&&p.sequence<Number.MAX_SAFE_INTEGER&&(protocol==='relay51'?Array.isArray(p.data)&&p.data.length===51&&p.data.every(n=>Number.isInteger(n)&&n>=0&&n<=255):words(p.data))))throw Error('通信データの形式が違います');
    if(Array.isArray(payload))modern();
    for(const packet of packets){
     const n=packet.sequence;if(n<expected)continue;
@@ -82,15 +92,20 @@ function createCelioLink(M,hooks){
   }else if(name==='deviceCommand'){
    if(!payload||!commands.has(payload.command)||typeof payload.uuid!=='string'||!payload.uuid.length||payload.uuid.length>128)throw Error('通信コマンドが不正です');
    if(id!==null)modern();
-   if(!seen.has(payload.uuid)){if(seen.size>=4096)throw Error('通信コマンドが多すぎます');seen.add(payload.uuid);note('command',{command:payload.command});M._link_command(payload.command);}
+   if(!seen.has(payload.uuid)){if(seen.size>=4096)throw Error('通信コマンドが多すぎます');seen.add(payload.uuid);note('command',{command:payload.command});
+    if(protocol==='relay51'&&payload.command===0x10){
+     const args=payload.args||payload;
+     if(args.playerCount!==2||!Number.isInteger(args.playerIndex)||args.playerIndex<0||args.playerIndex>1)throw Error('この版は2人通信専用です。2人の部屋を作り直してください。');
+     seat=args.playerIndex;note('player_settings',{playerCount:2,playerIndex:seat});M._link_command(seat===0?0x11:0x10);
+    }else if(!(protocol==='relay51'&&payload.command===0x13&&seat===0))M._link_command(payload.command);}
    acknowledge(id);
-  }else if(name==='partnerJoined'){
+  }else if(name==='partnerJoined'||name==='partyReady'){
    startDevice();acknowledge(id);displaySession('connected');report('相手が参加しました。両者ともゲーム内の通信受付へ進んでください。');
-  }else if(name==='partnerLeft'){
+  }else if(name==='partnerLeft'||name==='partyNotReady'){
    acknowledge(id);fail('相手が退出しました。部屋を作り直してください。');
   }else if(name==='sessionClose'){
    note('session_close',{gameClosed,outcome:'unknown'});acknowledge(id);disconnect('通信セッションが終了しました。ゲーム内の結果を確認してください。',!gameClosed);
-  }else note('unknown_event',{name:String(name).slice(0,50)});
+  }else{acknowledge(id);note('unknown_event',{name:String(name).slice(0,50)});}
  }
  function packet(message,room){
   if(typeof message!=='string'||message.length>262144)throw Error('通信パケットが不正です');lastReceive=Date.now();
@@ -100,7 +115,7 @@ function createCelioLink(M,hooks){
   const m=message.match(/^4([0-4])(\d*)(.*)$/s);if(!m)return;
   const type=m[1],id=m[2]?Number(m[2]):null;
   if(id!==null&&(!Number.isSafeInteger(id)||id>1e9))throw Error('受信確認番号が不正です');
-  if(type==='0'){if(!joined){joined=true;note('room_request');wire('420'+JSON.stringify(room?['sessionJoin',room]:['sessionCreate',null]));}return;}
+  if(type==='0'){if(!joined){joined=true;note('room_request');wire('420'+JSON.stringify(room?['sessionJoin',room]:['sessionCreate',protocol==='relay51'?2:null]));}return;}
   if(type==='1'||type==='4'){fail('中継サーバーに接続できませんでした。');return;}
   const data=m[3]?JSON.parse(m[3]):[];if(!Array.isArray(data))throw Error('通信イベントが不正です');
   if(type==='3'&&id===0){
@@ -108,7 +123,8 @@ function createCelioLink(M,hooks){
    const result=data[0];if(!result||result.variant!=='Ok')throw Error(result?.error==='Session is full'?'部屋が満員です':result?.error==='Session not found'?'部屋が見つかりません':'部屋への接続に失敗しました');
    const session=result.value||result.data||result,code=session.id;
    if(!/^\d{4}$/.test(String(code)))throw Error('部屋番号を取得できません');
-   inSession=true;roomCode=String(code);displaySession(room?'connected':'waiting');note('room_joined');report('部屋番号：'+String(code)+'\n'+(room?'参加しました。ゲーム内の通信受付へ進んでください。':'相手に番号を伝えてください。'));if(room)startDevice();
+   if(protocol==='relay51'&&session.playerCount!==undefined&&session.playerCount!==2)throw Error('この版は2人通信専用です。');
+   inSession=true;roomCode=String(code);displaySession(room?'connected':'waiting');note('room_joined');report('部屋番号：'+String(code)+'\n'+(room?'参加しました。ゲーム内の通信受付へ進んでください。':'相手に番号を伝えてください。'));if(room)startDevice();while(earlyEvents.length&&active)event(...earlyEvents.shift());
   }else if(type==='3'&&inFlight.has(id)){
    if(data.length!==1||data[0]!==true)throw Error('通信データが中継サーバーに拒否されました');
    const req=inFlight.get(id);clearTimeout(req.timer);inFlight.delete(id);queued-=req.count;schedule();
@@ -120,7 +136,12 @@ function createCelioLink(M,hooks){
    const p=M._link_event();if(!p)break;const v=M.HEAPU16.subarray(p/2,p/2+34);
    if(v[0]===3)throw Error('通信処理が追いつきません。部屋に入り直してください。');
    if(v[0]===1){note('device_status',{status:v[1]});if(v[1]===0xff07)gameClosed=true;emit('deviceStatus',{uuid:crypto.randomUUID(),linkStatus:v[1]});if(v[1]===0xff05){displaySession('connected');report('通信中 · ゲーム内で対戦・交換を操作してください。');}}
-   else if(v[0]===2){if(v[1]!==32)throw Error('通信データの長さが不正です');emit('deviceData',{sequence:sequence++,data:Array.from(v.subarray(2,34))});if(log)log.sent++;}
+   else if(v[0]===2){if(v[1]!==32)throw Error('通信データの長さが不正です');const data=Array.from(v.subarray(2,34));
+    if(protocol==='relay51'){
+     if(seat===null)throw Error('席番号がまだ設定されていません');
+     // Preserve all four core commands: send groups of three, padding only the last group.
+     for(let base=0;base<32;base+=24){const bytes=[];for(let c=0;c<3;c++){bytes.push(seat);for(let j=0;j<8;j++){const word=data[base+c*8+j]||0;bytes.push(word&255,word>>>8);}}emit('deviceData',{sequence:sequence++,data:bytes});if(log)log.sent++;}
+    }else{emit('deviceData',{sequence:sequence++,data});if(log)log.sent++;}}
   }}catch(e){fail(e.message);}
  }
  function heartbeat(){
@@ -132,11 +153,11 @@ function createCelioLink(M,hooks){
   if(now-lastReceive>pingLimit&&now>=resumeUntil){fail('サーバーからの受信が途絶えました。');return;}
   pump();
  }
- function start(room=''){
+ function start(room='',format='relay51'){
   if(room&&!/^\d{4}$/.test(room)){report('部屋番号は4桁の数字です。');return false;}
-  disconnect('接続準備中…');log=celioDiagnostics.begin(room?'guest':'host');note('protocol',{mode:'legacy'});
+  disconnect('接続準備中…');protocol=format==='legacy32'?'legacy32':'relay51';log=celioDiagnostics.begin(room?'guest':'host');note('protocol',{mode:protocol});
   if(!M._link_enable()){fail('先にROMを開いてください。');return false;}
-  active=true;joined=inSession=deviceStarted=batched=gameClosed=false;sequence=expected=0;nextAck=1;pingLimit=30000;lastReceive=lastTick=Date.now();resumeUntil=lastPing=lastPong=0;hooks.active(true);displaySession('connecting');report('Celio中継サーバーに接続中…');
+  active=true;joined=inSession=deviceStarted=gameClosed=false;batched=protocol==='relay51';sequence=expected=0;nextAck=1;pingLimit=30000;lastReceive=lastTick=Date.now();resumeUntil=lastPing=lastPong=0;hooks.active(true);displaySession('connecting');report('Celio中継サーバーに接続中…');
   try{const socket=ws=new WebSocket(endpoint);
    socket.onmessage=e=>{if(ws!==socket)return;try{packet(e.data,room);}catch(err){fail(err instanceof SyntaxError?'通信メッセージを解析できません':err.message);}};
    socket.onerror=()=>{if(ws===socket)fail('中継サーバーに接続できません。回線・サーバーの状態をご確認ください。');};

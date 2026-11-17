@@ -387,3 +387,9 @@ Run `node tests/local-link.cjs` and `node tests/ui.cjs` from the repository root
 
 ## Build 42 — inline restart confirmation
 - ROM and General Settings show restart/cancel directly beneath the selected restart button, without switching to the saves tab. Gamepad can confirm in place. Closing settings or changing tabs cancels pending confirmation.
+
+## 2026-11-17 — rom128-6 relay format
+
+- Online rooms default to the new 2-player/51-byte format, with PlayerSettings and partyReady support.
+- Legacy 32-word relay format remains selectable; local link and the core/save formats are unchanged.
+- Added offline protocol regression fixtures; live trade/battle interoperability is not yet verified.
